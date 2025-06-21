@@ -3,53 +3,65 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const PaymentModal = ({ show, onHide, appointmentId, amount, backendUrl, token }) => {
+const PaymentModal = ({ show, onHide, appointmentId, backendUrl, token }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const isPaymentInitiated = useRef(false);  // Track if the payment has been initiated
+  const isPaymentInitiated = useRef(false);
 
   useEffect(() => {
-    // Ensure amount is a valid number before initiating payment
     if (!show) return;
-    if (isNaN(amount) || amount <= 0) {
-      toast.error('Invalid amount');
-      return;
-    }
 
-    if (appointmentId && amount && show && !isPaymentInitiated.current) {
-      const initiatePayment = async () => {
-        try {
-          setLoading(true);
-          isPaymentInitiated.current = true;  // Mark that payment initiation is in progress
+    const fetchAndInitiatePayment = async () => {
+      try {
+        setLoading(true);
+        isPaymentInitiated.current = true;
 
-          // Make sure to pass necessary data to the backend
-          const { data } = await axios.post(
-            backendUrl + '/api/user/payment-stripe',
-            { appointmentId, amount },  // Pass appointmentId and amount to backend
-            { headers: { token } }
-          );
+        const { data: apptData } = await axios.get(
+          `${backendUrl}/api/user/get-appointment/${appointmentId}`,
+          { headers: { token } }
+        );
 
-          if (data.success) {
-            // Redirect to payment page with clientSecret and other details
-            navigate('/payment-page', {
-              state: {
-                clientSecret: data.clientSecret,
-                appointmentId,
-                amount,
-              },
-            });
-          } else {
-            toast.error(data.message);
-          }
-        } catch (error) {
-          toast.error('Failed to initiate payment');
-        } finally {
-          setLoading(false);
+        if (!apptData.success) {
+          toast.error(apptData.message || 'Failed to fetch appointment');
+          return;
         }
-      };
-      initiatePayment();
+
+        const { amount, insurance } = apptData.appointment;
+
+        if (isNaN(amount) || amount <= 0) {
+          toast.error('Invalid amount');
+          return;
+        }
+
+        const { data } = await axios.post(
+          `${backendUrl}/api/user/payment-stripe`,
+          { appointmentId, amount },
+          { headers: { token } }
+        );
+
+        if (data.success) {
+          navigate('/payment-page', {
+            state: {
+              clientSecret: data.clientSecret,
+              appointmentId,
+              amount,
+              insurance,
+            },
+          });
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
+        toast.error('Failed to initiate payment');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (appointmentId && show && !isPaymentInitiated.current) {
+      fetchAndInitiatePayment();
     }
-  }, [appointmentId, amount, backendUrl, token, show, navigate]);
+  }, [appointmentId, backendUrl, show, token, navigate]);
 
   if (!show) return null;
 

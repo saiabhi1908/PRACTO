@@ -10,12 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@100mslive/react-sdk": "^0.10.34",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.3.1",
     "axios": "^1.7.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.24.1",
     "react-speech-recognition": "^4.0.0",
-    "react-toastify": "^10.0.5"
+    "react-toastify": "^10.0.5",
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

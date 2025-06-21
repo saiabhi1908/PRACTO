@@ -7,8 +7,8 @@ const PaymentPage = () => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
-  const { state } = useLocation(); // Retrieve data passed through navigate()
-  const { clientSecret, amount, appointmentId } = state || {};
+  const { state } = useLocation();
+  const { clientSecret, amount, appointmentId, insurance } = state || {};
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
@@ -31,7 +31,7 @@ const PaymentPage = () => {
         toast.error(`Payment failed: ${error.message}`);
       } else if (paymentIntent.status === 'succeeded') {
         toast.success('Payment Successful!');
-        navigate('/appointments'); // Redirect to appointments page
+        navigate('/appointments');
       }
     } catch (err) {
       toast.error(`Payment processing failed: ${err.message}`);
@@ -47,7 +47,14 @@ const PaymentPage = () => {
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <h2>Complete Your Payment</h2>
-      <p>Amount: ${amount}</p>
+      <p>
+        Total: <strong>${amount}</strong>
+      </p>
+      {insurance && (
+        <p style={{ color: 'green' }}>
+          Insurance applied: {insurance.name} ({insurance.discountPercent}% off)
+        </p>
+      )}
       <div style={{ margin: '20px 0' }}>
         <CardElement />
       </div>

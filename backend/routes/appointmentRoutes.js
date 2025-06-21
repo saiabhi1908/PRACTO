@@ -1,11 +1,20 @@
 import express from "express";
 import Appointment from "../models/appointmentModel.js";
+import { bookAppointment } from "../controllers/doctorController.js";
 
 const appointmentRouter = express.Router();
 
+// Simple authentication middleware for /book route
+const authenticate = (req, res, next) => {
+  if (!req.body.userId) {
+    return res.status(401).json({ error: "Unauthorized. Missing userId." });
+  }
+  next();
+};
+
 /**
  * @route   POST /api/appointments
- * @desc    Book an appointment via voice assistant or frontend form
+ * @desc    Book an appointment via voice assistant or frontend form (no auth)
  * @access  Public
  */
 appointmentRouter.post("/api/appointments", async (req, res) => {
@@ -16,7 +25,9 @@ appointmentRouter.post("/api/appointments", async (req, res) => {
 
     // Basic validation
     if (!name || !doctor || !date || !time) {
-      return res.status(400).json({ error: "All fields (name, doctor, date, time) are required." });
+      return res
+        .status(400)
+        .json({ error: "All fields (name, doctor, date, time) are required." });
     }
 
     // Dummy user and doctor data for voice assistant
@@ -48,5 +59,8 @@ appointmentRouter.post("/api/appointments", async (req, res) => {
     res.status(500).json({ error: "Something went wrong while booking the appointment." });
   }
 });
+
+// New route: Book appointment with authentication & controller logic
+appointmentRouter.post("/book", authenticate, bookAppointment);
 
 export default appointmentRouter;
