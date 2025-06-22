@@ -14,6 +14,7 @@ import placesRouter from "./routes/places.js";
 import medicalReportRoutes from './routes/medicalReportRoutes.js';
 import videoRouter from "./routes/videoRoute.js";
 import insuranceRoutes from './routes/insuranceRoutes.js';
+import symptomCheckerRoutes from "./routes/symptomChecker.js";
 
 import sendEmail from "./utils/emailService.js";
 
@@ -41,6 +42,7 @@ app.use("/api/places", placesRouter);
 app.use('/api/insurance', insuranceRoutes);
 app.use("/api/100ms", videoRouter);
 app.use('/api/reports', medicalReportRoutes);
+app.use("/api/symptom-checker", symptomCheckerRoutes);
 app.use('/api/chat', chatRoutes);
 
 // Test email route

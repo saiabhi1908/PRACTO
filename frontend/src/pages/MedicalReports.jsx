@@ -33,7 +33,6 @@ const MedicalReports = () => {
     if (token) fetchReports();
   }, [token]);
 
-  // ✅ Multi-page PDF support
   const downloadPDF = async (id, reportName) => {
     const input = document.getElementById(`report-container-${id}`);
     if (!input) return;
@@ -94,7 +93,6 @@ const MedicalReports = () => {
         <ul className="space-y-6">
           {reports.map((report, idx) => (
             <li key={idx} className="border p-4 rounded bg-white">
-              {/* 🔁 PDF Content Container */}
               <div id={`report-container-${idx}`} style={{ padding: '10px', backgroundColor: 'white' }}>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">{report.reportName}</span>
@@ -107,75 +105,83 @@ const MedicalReports = () => {
                   </a>
                 </div>
 
-                {/* ✅ Blood Pressure */}
+                {/* 🩸 Blood Pressure */}
                 {report.chartData?.bloodPressure?.length > 0 && (
                   <>
                     <h4 className="mt-4 font-semibold">Blood Pressure Chart</h4>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={report.chartData.bloodPressure}>
-                        <CartesianGrid stroke="#ccc" />
-                        <XAxis dataKey="date" interval={0} />
-                        <YAxis />
-                        <Tooltip isAnimationActive={false} />
-                        <Legend />
-                        <Line type="monotone" dataKey="systolic" stroke="#8884d8" />
-                        <Line type="monotone" dataKey="diastolic" stroke="#82ca9d" />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div id="bp-chart">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={report.chartData.bloodPressure}>
+                          <CartesianGrid stroke="#ccc" />
+                          <XAxis dataKey="date" interval={0} />
+                          <YAxis />
+                          <Tooltip isAnimationActive={false} />
+                          <Legend />
+                          <Line type="monotone" dataKey="systolic" stroke="#8884d8" />
+                          <Line type="monotone" dataKey="diastolic" stroke="#82ca9d" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                     {renderTable(["Date", "Systolic", "Diastolic"], report.chartData.bloodPressure, ["date", "systolic", "diastolic"])}
                   </>
                 )}
 
-                {/* ✅ Glucose */}
+                {/* 🍬 Glucose Levels */}
                 {report.chartData?.glucoseLevels?.length > 0 && (
                   <>
                     <h4 className="mt-4 font-semibold">Glucose Levels</h4>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={report.chartData.glucoseLevels}>
-                        <CartesianGrid stroke="#ccc" />
-                        <XAxis dataKey="date" interval={0} />
-                        <YAxis />
-                        <Tooltip isAnimationActive={false} />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#ff7300" />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div id="glucose-chart">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={report.chartData.glucoseLevels}>
+                          <CartesianGrid stroke="#ccc" />
+                          <XAxis dataKey="date" interval={0} />
+                          <YAxis />
+                          <Tooltip isAnimationActive={false} />
+                          <Legend />
+                          <Line type="monotone" dataKey="value" stroke="#ff7300" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                     {renderTable(["Date", "Glucose (mg/dL)"], report.chartData.glucoseLevels, ["date", "value"])}
                   </>
                 )}
 
-                {/* ✅ Heart Rate */}
+                {/* ❤️ Heart Rate */}
                 {report.chartData?.heartRate?.length > 0 && (
                   <>
                     <h4 className="mt-4 font-semibold">Heart Rate</h4>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={report.chartData.heartRate}>
-                        <CartesianGrid stroke="#ccc" />
-                        <XAxis dataKey="date" interval={0} />
-                        <YAxis />
-                        <Tooltip isAnimationActive={false} />
-                        <Legend />
-                        <Line type="monotone" dataKey="bpm" stroke="#dc2626" />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div id="heart-chart">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={report.chartData.heartRate}>
+                          <CartesianGrid stroke="#ccc" />
+                          <XAxis dataKey="date" interval={0} />
+                          <YAxis />
+                          <Tooltip isAnimationActive={false} />
+                          <Legend />
+                          <Line type="monotone" dataKey="bpm" stroke="#dc2626" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                     {renderTable(["Date", "BPM"], report.chartData.heartRate, ["date", "bpm"])}
                   </>
                 )}
 
-                {/* ✅ Thyroid TSH */}
+                {/* 🧠 Thyroid TSH */}
                 {report.chartData?.thyroidLevels?.length > 0 && (
                   <>
                     <h4 className="mt-4 font-semibold">Thyroid TSH Levels</h4>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={report.chartData.thyroidLevels}>
-                        <CartesianGrid stroke="#ccc" />
-                        <XAxis dataKey="date" interval={0} />
-                        <YAxis />
-                        <Tooltip isAnimationActive={false} />
-                        <Legend />
-                        <Line type="monotone" dataKey="tsh" stroke="#8e44ad" dot />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div id="thyroid-chart">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={report.chartData.thyroidLevels}>
+                          <CartesianGrid stroke="#ccc" />
+                          <XAxis dataKey="date" interval={0} />
+                          <YAxis />
+                          <Tooltip isAnimationActive={false} />
+                          <Legend />
+                          <Line type="monotone" dataKey="tsh" stroke="#8e44ad" dot />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                     {renderTable(["Date", "TSH (mIU/L)"], report.chartData.thyroidLevels, ["date", "tsh"])}
                   </>
                 )}
