@@ -9,6 +9,20 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import PatientChat from '../components/PatientChat';
 
+const formatFullDateTime = (date) => {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',       // Mon
+    month: 'short',         // Jun
+    day: 'numeric',         // 24
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short'   // IST
+  }).format(new Date(date));
+};
+
+
 const Appointment = () => {
   const { docId } = useParams();
   const {
@@ -253,7 +267,7 @@ const Appointment = () => {
               onClick={() => setSelectedSlot(slot)}
               className={`p-2 rounded-md border ${selectedSlot === slot ? 'border-green-600 bg-green-100' : 'border-gray-300'}`}
             >
-              {slot.time}
+              {formatFullDateTime(slot.datetime)}
             </button>
           ))}
         </div>
