@@ -10,15 +10,19 @@ const formatFullDateTimeFromParts = (slotDate, slotTime) => {
   if (!slotDate || !slotTime) return 'Invalid date';
 
   const [day, month, year] = slotDate.split('_').map(Number);
-  const [time, meridian] = slotTime.split(' ');
-  const [hoursRaw, minutes] = time.split(':').map(Number);
 
-  let hours = hoursRaw;
-  if (meridian === 'PM' && hoursRaw < 12) hours += 12;
-  if (meridian === 'AM' && hoursRaw === 12) hours = 0;
+  // Clean and extract time + AM/PM
+  const match = slotTime.trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return 'Invalid time format';
 
-  const dateObj = new Date(year, month - 1, day, hours, minutes);
-  if (isNaN(dateObj)) return 'Invalid date';
+  let [_, hourStr, minuteStr, meridian] = match;
+  let hours = parseInt(hourStr, 10);
+  let minutes = parseInt(minuteStr, 10);
+
+  if (meridian.toUpperCase() === 'PM' && hours < 12) hours += 12;
+  if (meridian.toUpperCase() === 'AM' && hours === 12) hours = 0;
+
+  const localDate = new Date(year, month - 1, day, hours, minutes);
 
   return new Intl.DateTimeFormat(undefined, {
     weekday: 'short',
@@ -29,8 +33,11 @@ const formatFullDateTimeFromParts = (slotDate, slotTime) => {
     minute: '2-digit',
     hour12: true,
     timeZoneName: 'short'
-  }).format(dateObj);
+  }).format(localDate);
 };
+
+
+
 
 const MyAppointments = () => {
   const { backendUrl, token } = useContext(AppContext);
