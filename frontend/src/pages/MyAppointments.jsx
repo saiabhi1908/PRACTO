@@ -6,21 +6,39 @@ import { toast } from 'react-toastify';
 import { assets } from '../assets/assets';
 import PatientChat from '../components/PatientChat';
 
+const formatFullDateTimeFromParts = (slotDate, slotTime) => {
+  if (!slotDate || !slotTime) return 'Invalid date';
+
+  const [day, month, year] = slotDate.split('_').map(Number);
+  const [time, meridian] = slotTime.split(' ');
+  const [hoursRaw, minutes] = time.split(':').map(Number);
+
+  let hours = hoursRaw;
+  if (meridian === 'PM' && hoursRaw < 12) hours += 12;
+  if (meridian === 'AM' && hoursRaw === 12) hours = 0;
+
+  const dateObj = new Date(year, month - 1, day, hours, minutes);
+  if (isNaN(dateObj)) return 'Invalid date';
+
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short'
+  }).format(dateObj);
+};
+
 const MyAppointments = () => {
   const { backendUrl, token } = useContext(AppContext);
   const navigate = useNavigate();
 
   const [appointments, setAppointments] = useState([]);
   const [payment, setPayment] = useState('');
-  const [openChatId, setOpenChatId] = useState(null); // 🔁 Track open chat
-
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
-    "Sep", "Oct", "Nov", "Dec"];
-
-  const slotDateFormat = (slotDate) => {
-    const dateArray = slotDate.split('_');
-    return dateArray[0] + " " + months[Number(dateArray[1]) - 1] + " " + dateArray[2];
-  };
+  const [openChatId, setOpenChatId] = useState(null);
 
   const getUserAppointments = async () => {
     try {
@@ -59,7 +77,7 @@ const MyAppointments = () => {
       amount: order.amount,
       currency: order.currency,
       name: 'Appointment Payment',
-      description: "Appointment Payment",
+      description: 'Appointment Payment',
       order_id: order.id,
       receipt: order.receipt,
       handler: async (response) => {
@@ -140,7 +158,10 @@ const MyAppointments = () => {
               <p className='text-[#464646] font-medium mt-1'>Address:</p>
               <p>{item.docData.address.line1}</p>
               <p>{item.docData.address.line2}</p>
-              <p className='mt-1'><span className='text-sm text-[#3C3C3C] font-medium'>Date & Time:</span> {slotDateFormat(item.slotDate)} | {item.slotTime}</p>
+              <p className='mt-1'>
+                <span className='text-sm text-[#3C3C3C] font-medium'>Date & Time:</span>{' '}
+                {formatFullDateTimeFromParts(item.slotDate, item.slotTime)}
+              </p>
 
               {item.insurance && (
                 <div className="mt-1 text-sm text-gray-700">
@@ -150,7 +171,6 @@ const MyAppointments = () => {
 
               <p className='mt-1'><strong>Final Amount:</strong> ${item.amount}</p>
 
-              {/* 🔁 Chat Toggle & Box */}
               <div className="mt-2">
                 <button
                   onClick={() => setOpenChatId(openChatId === item._id ? null : item._id)}
@@ -196,7 +216,11 @@ const MyAppointments = () => {
 
               {!item.cancelled && !item.isCompleted && (
                 <button
-                  onClick={() => navigate(`/video-call?user=${item.userId || 'patient'}&role=patient`)}
+                  onClick={() =>
+                    navigate(
+                      `/video-call?room=${item._id}&user=${item.userId}&role=patient`
+                    )
+                  }
                   className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-green-600 hover:text-white transition-all duration-300'
                 >
                   Join Video Call
