@@ -1,11 +1,12 @@
-import React, { useContext } from 'react'
+import React, { useContext } from 'react';
 import { DoctorContext } from './context/DoctorContext';
 import { AdminContext } from './context/AdminContext';
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Navbar from './components/Navbar'
-import Sidebar from './components/Sidebar'
+
+import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Admin/Dashboard';
 import AllAppointments from './pages/Admin/AllAppointments';
 import AddDoctor from './pages/Admin/AddDoctor';
@@ -16,12 +17,12 @@ import DoctorDashboard from './pages/Doctor/DoctorDashboard';
 import DoctorProfile from './pages/Doctor/DoctorProfile';
 import UploadReport from './pages/Admin/UploadReport';
 
-
+import VideoCall from './pages/VideoCall'; // ✅ already imported
+import { HMSRoomProvider } from '@100mslive/react-sdk'; // ✅ already imported
 
 const App = () => {
-
-  const { dToken } = useContext(DoctorContext)
-  const { aToken } = useContext(AdminContext)
+  const { dToken } = useContext(DoctorContext);
+  const { aToken } = useContext(AdminContext);
 
   return dToken || aToken ? (
     <div className='bg-[#F8F9FD]'>
@@ -41,6 +42,16 @@ const App = () => {
           <Route path='/doctor-dashboard' element={<DoctorDashboard />} />
           <Route path='/doctor-appointments' element={<DoctorAppointments />} />
           <Route path='/doctor-profile' element={<DoctorProfile />} />
+
+          {/* ✅ Add video-call route */}
+          <Route
+            path='/video-call'
+            element={
+              <HMSRoomProvider>
+                <VideoCall />
+              </HMSRoomProvider>
+            }
+          />
         </Routes>
       </div>
     </div>
@@ -49,7 +60,7 @@ const App = () => {
       <ToastContainer />
       <Login />
     </>
-  )
-}
+  );
+};
 
 export default App;
