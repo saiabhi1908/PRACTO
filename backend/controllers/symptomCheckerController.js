@@ -15,7 +15,7 @@ export const checkSymptoms = async (req, res) => {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: process.env.OPENROUTER_MODEL || "gpt-3.5-turbo",
+        model: process.env.OPENROUTER_MODEL || "mistralai/mistral-7b-instruct",
         messages: [{ role: "user", content: prompt }],
       },
       {
