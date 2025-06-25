@@ -8,22 +8,15 @@ import PatientChat from '../components/PatientChat';
 
 const formatFullDateTimeFromParts = (slotDate, slotTime) => {
   if (!slotDate || !slotTime) return 'Invalid date';
-
   const [day, month, year] = slotDate.split('_').map(Number);
-
-  // Clean and extract time + AM/PM
   const match = slotTime.trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
   if (!match) return 'Invalid time format';
-
   let [_, hourStr, minuteStr, meridian] = match;
   let hours = parseInt(hourStr, 10);
   let minutes = parseInt(minuteStr, 10);
-
   if (meridian.toUpperCase() === 'PM' && hours < 12) hours += 12;
   if (meridian.toUpperCase() === 'AM' && hours === 12) hours = 0;
-
   const localDate = new Date(year, month - 1, day, hours, minutes);
-
   return new Intl.DateTimeFormat(undefined, {
     weekday: 'short',
     year: 'numeric',
@@ -36,9 +29,6 @@ const formatFullDateTimeFromParts = (slotDate, slotTime) => {
   }).format(localDate);
 };
 
-
-
-
 const MyAppointments = () => {
   const { backendUrl, token } = useContext(AppContext);
   const navigate = useNavigate();
@@ -46,6 +36,8 @@ const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [payment, setPayment] = useState('');
   const [openChatId, setOpenChatId] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
 
   const getUserAppointments = async () => {
     try {
@@ -223,11 +215,9 @@ const MyAppointments = () => {
 
               {!item.cancelled && !item.isCompleted && (
                 <button
-                  onClick={() =>
-                    navigate(
-                      `/video-call?room=${item._id}&user=${item.userId}&role=patient`
-                    )
-                  }
+                  onClick={() => {
+                    navigate(`/video-call?room=${item._id}&user=${item.userId}&role=patient`);
+                  }}
                   className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-green-600 hover:text-white transition-all duration-300'
                 >
                   Join Video Call
@@ -240,7 +230,10 @@ const MyAppointments = () => {
 
               {!item.cancelled && !item.isCompleted && (
                 <button
-                  onClick={() => cancelAppointment(item._id)}
+                  onClick={() => {
+                    setSelectedAppointmentId(item._id);
+                    setShowConfirm(true);
+                  }}
                   className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'
                 >
                   Cancel appointment
@@ -254,6 +247,32 @@ const MyAppointments = () => {
           </div>
         ))}
       </div>
+
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Cancel Appointment</h2>
+            <p>Are you sure you want to cancel this appointment?</p>
+            <div className="mt-6 flex justify-end gap-4">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                onClick={() => setShowConfirm(false)}
+              >
+                No
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                onClick={() => {
+                  cancelAppointment(selectedAppointmentId);
+                  setShowConfirm(false);
+                }}
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
