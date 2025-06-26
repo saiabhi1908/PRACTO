@@ -568,6 +568,75 @@ Prescripta HealthCare Team
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+const rescheduleAppointment = async (req, res) => {
+  try {
+    const { appointmentId, newSlotDate, newSlotTime } = req.body;
+
+    const appointment = await appointmentModel.findById(appointmentId);
+    if (!appointment || appointment.cancelled) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    const doctor = await doctorModel.findById(appointment.docId);
+    if (!doctor) return res.status(404).json({ success: false, message: "Doctor not found" });
+
+    const slots_booked = { ...doctor.slots_booked };
+
+    // Remove old slot
+    const oldSlotList = slots_booked[appointment.slotDate] || [];
+    slots_booked[appointment.slotDate] = oldSlotList.filter(t => t !== appointment.slotTime);
+    if (slots_booked[appointment.slotDate].length === 0) delete slots_booked[appointment.slotDate];
+
+    // Add new slot
+    if (slots_booked[newSlotDate]?.includes(newSlotTime)) {
+      return res.status(400).json({ success: false, message: "New slot already booked" });
+    }
+    slots_booked[newSlotDate] = [...(slots_booked[newSlotDate] || []), newSlotTime];
+
+    // Update doctor slot record
+    await doctorModel.findByIdAndUpdate(doctor._id, { slots_booked });
+
+    // Update appointment details
+    appointment.slotDate = newSlotDate;
+    appointment.slotTime = newSlotTime;
+
+    // ✅ Set correct appointment.date for reminder scheduler
+    const [day, month, year] = newSlotDate.split('_').map(Number);
+    const [time, meridian] = newSlotTime.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (meridian.toLowerCase() === 'pm' && hours !== 12) hours += 12;
+    if (meridian.toLowerCase() === 'am' && hours === 12) hours = 0;
+
+    appointment.date = new Date(year, month - 1, day, hours, minutes, 0);
+
+    await appointment.save();
+
+    // Send reschedule confirmation email
+    if (appointment.userData?.email) {
+      const subject = "🕐 Appointment Rescheduled - Prescripta HealthCare";
+      const message = `
+Hi ${appointment.userData.name},
+
+Your appointment with Dr. ${appointment.docData.name} has been rescheduled.
+
+New Slot:
+🗓 ${newSlotDate}
+⏰ ${newSlotTime}
+
+Thank you for choosing Prescripta HealthCare.
+      `;
+      await sendEmail(appointment.userData.email, subject, message);
+    }
+
+    res.json({ success: true, message: "Appointment rescheduled", appointment });
+  } catch (error) {
+    console.error("❌ rescheduleAppointment error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // ========= EXPORT ALL =========
 
 export {
@@ -584,6 +653,7 @@ export {
     resetPassword,
     verifyOtp,
     sendResetOTP,
+    rescheduleAppointment,
     getAppointmentById,
     verifyResetOTP
 };
