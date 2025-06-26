@@ -11,6 +11,7 @@ import {
     verifyStripe,
     sendOTP,
     sendResetOTP,
+    rescheduleAppointment,
     verifyOtp,
     getAppointmentById,
     verifyResetOTP,
@@ -18,6 +19,7 @@ import {
 } from '../controllers/userController.js';
 
 import upload from '../middleware/multer.js';
+
 import authUser from '../middleware/authUser.js';
 import User from '../models/userModel.js';
 import generateToken from '../utils/generateToken.js';
@@ -40,6 +42,8 @@ userRouter.get('/get-appointment/:id', authUser, getAppointmentById);
 userRouter.post("/book-appointment", authUser, bookAppointment);
 userRouter.get("/appointments", authUser, listAppointment);
 userRouter.post("/cancel-appointment", authUser, cancelAppointment);
+userRouter.post('/reschedule-appointment', authUser, rescheduleAppointment);
+
 
 // Payment routes
 userRouter.post("/payment-stripe", authUser, paymentStripe);
