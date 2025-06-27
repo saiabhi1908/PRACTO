@@ -10,6 +10,7 @@ const appointmentSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
 
   date: { type: Number, required: true },
+  videoConsultation: { type: Boolean, default: false },
   cancelled: { type: Boolean, default: false },
   payment: { type: Boolean, default: false },
   isCompleted: { type: Boolean, default: false },
