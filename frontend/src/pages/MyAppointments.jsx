@@ -55,6 +55,22 @@ const MyAppointments = () => {
     }
   };
 
+  const switchMode = async (appointmentId, newMode) => {
+    try {
+      const { data } = await axios.post(`${backendUrl}/api/user/switch-appointment-mode`, {
+        appointmentId,
+        newMode,
+      }, {
+        headers: { token },
+      });
+
+      toast.success(data.message);
+      getUserAppointments();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to switch mode.");
+    }
+  };
+
   const cancelAppointment = async (appointmentId) => {
     try {
       const { data } = await axios.post(
@@ -228,6 +244,40 @@ const MyAppointments = () => {
                 </div>
               )}
               <p className='mt-1'><strong>Final Amount:</strong> ${item.amount}</p>
+
+              {!item.payment && !item.videoConsultation && (
+                <p className="text-sm text-yellow-600 mt-1">
+                  💡 Make a payment either in Clinic or Online — Appointment is already confirmed.
+                </p>
+              )}
+
+              {!item.payment && item.videoConsultation && (
+                <p className="text-sm text-red-600 mt-1">
+                  💳 Payment required — Please pay online to confirm your video consultation. Join link will appear after payment.
+                </p>
+              )}
+
+              {/* ✅ NEW: Switch mode buttons */}
+              {!item.isCompleted && !item.cancelled && (
+                <div className="mt-2 flex gap-2">
+                  {item.videoConsultation ? (
+                    <button
+                      onClick={() => switchMode(item._id, "in-clinic")}
+                      className="text-sm text-yellow-700 border border-yellow-400 px-2 py-1 rounded"
+                    >
+                      Switch to In-Clinic
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => switchMode(item._id, "video")}
+                      className="text-sm text-blue-700 border border-blue-400 px-2 py-1 rounded"
+                    >
+                      Switch to Video
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className='mt-2'>
                 <button
                   onClick={() => setOpenChatId(openChatId === item._id ? null : item._id)}
@@ -267,24 +317,26 @@ const MyAppointments = () => {
                   </button>
                 </>
               )}
+
+              {item.videoConsultation && item.payment && !item.cancelled && !item.isCompleted && (
+                <button
+                  onClick={() => navigate(`/video-call?room=${item._id}&user=${item.userId}&role=patient`)}
+                  className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-green-600 hover:text-white transition-all duration-300'
+                >
+                  Join Video Call
+                </button>
+              )}
+
               {!item.cancelled && !item.isCompleted && (
-                <>
-                  <button
-                    onClick={() => navigate(`/video-call?room=${item._id}&user=${item.userId}&role=patient`)}
-                    className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-green-600 hover:text-white transition-all duration-300'
-                  >
-                    Join Video Call
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedAppointmentId(item._id);
-                      setShowConfirm(true);
-                    }}
-                    className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'
-                  >
-                    Cancel appointment
-                  </button>
-                </>
+                <button
+                  onClick={() => {
+                    setSelectedAppointmentId(item._id);
+                    setShowConfirm(true);
+                  }}
+                  className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'
+                >
+                  Cancel appointment
+                </button>
               )}
               {item.cancelled && !item.isCompleted && (
                 <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>
@@ -309,6 +361,7 @@ const MyAppointments = () => {
         ))}
       </div>
 
+      {/* Cancel Confirmation Modal */}
       {showConfirm && (
         <div className='fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50'>
           <div className='bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md'>
@@ -322,6 +375,7 @@ const MyAppointments = () => {
         </div>
       )}
 
+      {/* Reschedule Modal */}
       {showRescheduleDialog && selectedAppointment && (
         <div className='fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center'>
           <div className='bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-lg'>
