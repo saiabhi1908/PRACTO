@@ -15,7 +15,8 @@ import {
     verifyOtp,
     getAppointmentById,
     verifyResetOTP,
-    resetPassword
+    resetPassword,
+    switchAppointmentMode
 } from '../controllers/userController.js';
 
 import upload from '../middleware/multer.js';
@@ -43,6 +44,8 @@ userRouter.post("/book-appointment", authUser, bookAppointment);
 userRouter.get("/appointments", authUser, listAppointment);
 userRouter.post("/cancel-appointment", authUser, cancelAppointment);
 userRouter.post('/reschedule-appointment', authUser, rescheduleAppointment);
+userRouter.post('/switch-appointment-mode', authUser, switchAppointmentMode);
+
 
 
 // Payment routes
