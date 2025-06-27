@@ -1,4 +1,3 @@
-// ... keep all imports as-is
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
@@ -11,17 +10,16 @@ import PatientChat from '../components/PatientChat';
 
 const formatFullDateTime = (date) => {
   return new Intl.DateTimeFormat(undefined, {
-    weekday: 'short',       // Mon
-    month: 'short',         // Jun
-    day: 'numeric',         // 24
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
-    timeZoneName: 'short'   // IST
+    timeZoneName: 'short'
   }).format(new Date(date));
 };
-
 
 const Appointment = () => {
   const { docId } = useParams();
@@ -44,9 +42,13 @@ const Appointment = () => {
   const [loading, setLoading] = useState(false);
 
   const [userInsurances, setUserInsurances] = useState([]);
+  const [hasInsurance, setHasInsurance] = useState(false);
   const [selectedInsuranceId, setSelectedInsuranceId] = useState('');
   const [finalFee, setFinalFee] = useState(null);
   const [appointmentId, setAppointmentId] = useState(null);
+
+  const [payInClinic, setPayInClinic] = useState(false); // ✅ new
+  const [isVideoConsultation, setIsVideoConsultation] = useState(false); // ✅ new
 
   useEffect(() => {
     if (doctors && doctors.length > 0) {
@@ -72,21 +74,19 @@ const Appointment = () => {
 
   useEffect(() => {
     const baseFee = docInfo?.fees ?? docInfo?.fee;
-    if (!selectedInsuranceId) {
+    if (!hasInsurance || !selectedInsuranceId) {
       setFinalFee(baseFee || null);
       return;
     }
-
-    // Always charge 10% of the fee when insurance is selected
     setFinalFee(baseFee * 0.1);
-  }, [selectedInsuranceId, docInfo]);
+  }, [hasInsurance, selectedInsuranceId, docInfo]);
 
   useEffect(() => {
     if (!docInfo) return;
     setDocSlots([]);
 
     let today = new Date();
-    const extraDays = selectedInsuranceId ? 9 : 7;
+    const extraDays = hasInsurance && selectedInsuranceId ? 9 : 7;
 
     for (let i = 0; i < extraDays; i++) {
       let currentDate = new Date(today);
@@ -132,7 +132,7 @@ const Appointment = () => {
 
       setDocSlots(prev => [...prev, timeSlots]);
     }
-  }, [docInfo, selectedInsuranceId]);
+  }, [docInfo, hasInsurance, selectedInsuranceId]);
 
   useEffect(() => {
     const fetchExistingAppointment = async () => {
@@ -170,11 +170,6 @@ const Appointment = () => {
       return;
     }
 
-    if (!selectedInsuranceId) {
-      toast.error("Please select an insurance policy to proceed.");
-      return;
-    }
-
     setLoading(true);
     try {
       const date = selectedSlot.datetime;
@@ -185,14 +180,18 @@ const Appointment = () => {
       const slotDate = `${day}_${month}_${year}`;
       const slotTime = selectedSlot.time;
 
+      const bookingData = {
+        docId,
+        slotDate,
+        slotTime,
+        isVideoConsultation,
+        ...(hasInsurance && selectedInsuranceId ? { insuranceId: selectedInsuranceId } : {}),
+        ...(payInClinic && !isVideoConsultation ? { payInClinic } : {})
+      };
+
       const { data } = await axios.post(
         backendUrl + '/api/user/book-appointment',
-        {
-          docId,
-          slotDate,
-          slotTime,
-          insuranceId: selectedInsuranceId
-        },
+        bookingData,
         { headers: { token } }
       );
 
@@ -219,6 +218,7 @@ const Appointment = () => {
 
   return (
     <div className="p-6 bg-gray-50 rounded-lg shadow-md max-w-4xl mx-auto">
+      {/* Doctor Info */}
       <div className="flex flex-col md:flex-row items-center gap-6">
         <img className="w-40 h-40 md:w-52 md:h-52 rounded-lg shadow-md object-cover" src={docInfo.image || docImage} alt={docInfo.name} />
         <div className="flex-1">
@@ -239,14 +239,15 @@ const Appointment = () => {
               {currencySymbol}{docInfo.fees ?? docInfo.fee ?? 'N/A'}
             </span>
           </p>
-          {selectedInsuranceId && typeof finalFee === 'number' && (
+          {hasInsurance && selectedInsuranceId && typeof finalFee === 'number' && (
             <p className="text-sm text-green-700 font-semibold mt-1">
-              Discounted Fee: <span className="text-green-800 font-bold">{currencySymbol}{finalFee.toFixed(2)}</span>
+              ✅ Discounted Fee: <span className="text-green-800 font-bold">{currencySymbol}{finalFee.toFixed(2)}</span>
             </p>
           )}
         </div>
       </div>
 
+      {/* Slot Selection */}
       <div className="mt-8">
         <h3 className="text-2xl font-bold text-gray-700 mb-4">Available Slots</h3>
         <div className="flex justify-center gap-4 mb-6">
@@ -273,30 +274,98 @@ const Appointment = () => {
         </div>
       </div>
 
+      {/* Insurance */}
       <div className="mt-8">
-        <h4 className="text-xl font-semibold mb-3">Select Insurance</h4>
-        <select
-          className="w-full p-2 border border-gray-300 rounded-md"
-          value={selectedInsuranceId}
-          onChange={e => setSelectedInsuranceId(e.target.value)}
-        >
-          <option value="">-- Select Insurance --</option>
-          {userInsurances.map(ins => (
-            <option key={ins._id} value={ins._id}>
-              {ins.insuranceProvider} ({ins.coverageDetails})
-            </option>
-          ))}
-        </select>
+        <h4 className="text-xl font-semibold mb-2">Do you have insurance?</h4>
+        <label className="flex items-center gap-2 mb-2">
+          <input
+            type="checkbox"
+            checked={hasInsurance}
+            onChange={() => {
+              setHasInsurance(!hasInsurance);
+              if (!hasInsurance === false) setSelectedInsuranceId('');
+            }}
+          />
+          I have insurance
+        </label>
+
+        {hasInsurance && (
+          <>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={selectedInsuranceId}
+              onChange={e => setSelectedInsuranceId(e.target.value)}
+            >
+              <option value="">-- Select Insurance --</option>
+              {userInsurances.map(ins => (
+                <option key={ins._id} value={ins._id}>
+                  {ins.insuranceProvider} ({ins.coverageDetails})
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-green-600 mt-1">✅ 90% discount will be applied</p>
+          </>
+        )}
+
+        {/* Video Consultation */}
+        <div className="mt-4">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isVideoConsultation}
+              onChange={() => {
+                setIsVideoConsultation(!isVideoConsultation);
+                if (!isVideoConsultation) setPayInClinic(false); // force pay online
+              }}
+            />
+            Video Consultation (Online)
+          </label>
+          {isVideoConsultation && (
+            <p className="text-sm text-blue-600 mt-1">
+              💡 You must pay online for video consultations.
+            </p>
+          )}
+        </div>
+
+        {/* Pay at Clinic */}
+        {!isVideoConsultation && (
+          <div className="mt-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={payInClinic}
+                onChange={() => setPayInClinic(!payInClinic)}
+              />
+              Pay at Clinic (appointment will still be confirmed)
+            </label>
+          </div>
+        )}
       </div>
 
+      {/* Booking Button */}
       <div className="mt-8">
-        <button
-          disabled={loading}
-          onClick={bookAppointment}
-          className="w-full p-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
-        >
-          {loading ? 'Booking...' : `Book Appointment${finalFee !== null ? ` - ${currencySymbol}${finalFee.toFixed(2)}` : ''}`}
-        </button>
+        {payInClinic && !isVideoConsultation ? (
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 p-4 rounded-md">
+            <p className="mb-2 font-semibold">
+              You’ve chosen to pay at the clinic.
+            </p>
+            <button
+              disabled={loading}
+              onClick={bookAppointment}
+              className="w-full p-3 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors"
+            >
+              {loading ? 'Booking...' : 'Confirm Appointment (Pay at Clinic)'}
+            </button>
+          </div>
+        ) : (
+          <button
+            disabled={loading}
+            onClick={bookAppointment}
+            className="w-full p-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
+          >
+            {loading ? 'Booking...' : `Book Appointment${finalFee !== null ? ` - ${currencySymbol}${finalFee.toFixed(2)}` : ''}`}
+          </button>
+        )}
       </div>
 
       {appointmentId && (
