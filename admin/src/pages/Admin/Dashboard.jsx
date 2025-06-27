@@ -80,14 +80,17 @@ const Dashboard = () => {
                     </button>
 
                     {/* ✅ New Join Video Call Button */}
-                    <button
-                      onClick={() =>
-                        window.open(`/video-call?room=${item._id}&user=${item.docData._id}&role=doctor`, "_blank")
-                      }
-                      className="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded"
-                    >
-                      Join Video Call
-                    </button>
+{item.videoConsultation && item.payment && (
+  <button
+    onClick={() =>
+      window.open(`/video-call?room=${item._id}&user=${item.docData._id}&role=doctor`, "_blank")
+    }
+    className="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded"
+  >
+    Join Video Call
+  </button>
+)}
+
                   </>
                 )}
               </div>
