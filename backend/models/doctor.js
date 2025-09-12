@@ -1,4 +1,4 @@
-// models/doctorModel.js
+// models/doctor.js
 import mongoose from "mongoose";
 
 const doctorSchema = new mongoose.Schema({
@@ -12,6 +12,13 @@ const doctorSchema = new mongoose.Schema({
   acceptedInsurances: {
     type: [String],
     default: [],
+  },
+  // ⭐ New rating field
+  rating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5,
   },
 });
 

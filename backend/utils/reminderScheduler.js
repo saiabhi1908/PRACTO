@@ -2,17 +2,24 @@ import cron from 'node-cron';
 import appointmentModel from '../models/appointmentModel.js';
 import sendEmail from './emailService.js';
 
-const sendReminderEmail = async (email, name, docName, slotDate, slotTime) => {
+// ✅ Helper: Remove duplicate "Dr." prefix
+const cleanDoctorName = (name) => {
+  return name.replace(/^Dr\.?\s*/i, '').trim();
+};
+
+// ✅ Send reminder with Video/In-Clinic mode
+const sendReminderEmail = async (email, name, docName, slotDate, slotTime, mode) => {
   const subject = '⏰ Appointment Reminder - 24 Hours Left';
   const message = `
 Hi ${name},
 
-This is a reminder for your appointment with Dr. ${docName}.
+This is a reminder for your ${mode.toLowerCase()} appointment with ${docName}.
 
 🗓 Date: ${slotDate}
 ⏰ Time: ${slotTime}
+🏥 Mode: ${mode}
 
-Regards,
+Regards,  
 Prescripta HealthCare
   `;
   try {
@@ -30,15 +37,18 @@ const startReminderScheduler = () => {
     const in24Hours = now + 24 * 60 * 60 * 1000;
     const oneHour = 60 * 60 * 1000;
 
-    console.log('🔄 Running real reminder scheduler at', new Date(now).toLocaleString());
+    console.log('🔄 Running reminder scheduler at', new Date(now).toLocaleString());
     console.log(
-      `📌 Searching appointments between ${new Date(in24Hours - oneHour).toLocaleString()} and ${new Date(in24Hours + oneHour).toLocaleString()}`
+      `📌 Looking for appointments between ${new Date(in24Hours - oneHour).toLocaleString()} and ${new Date(in24Hours + oneHour).toLocaleString()}`
     );
 
     try {
       const appointments = await appointmentModel.find({
         cancelled: false,
-        payment: true,
+        $or: [
+          { videoConsultation: true, payment: true }, // Only paid video appointments
+          { videoConsultation: false } // In-clinic is always allowed
+        ],
         date: {
           $gte: in24Hours - oneHour,
           $lte: in24Hours + oneHour,
@@ -48,21 +58,27 @@ const startReminderScheduler = () => {
       console.log(`🧠 Found ${appointments.length} appointment(s) needing reminders`);
 
       for (const appt of appointments) {
-        const { userData, docData, slotDate, slotTime } = appt;
+        const { userData, docData, slotDate, slotTime, videoConsultation } = appt;
 
-        console.log(`📋 Checking appointment: ${appt._id} | date: ${new Date(appt.date).toLocaleString()}`);
+        console.log(`📋 Appointment: ${appt._id} | Date: ${new Date(appt.date).toLocaleString()}`);
+        console.log(`💳 Payment status: ${appt.payment ? 'Online Paid' : 'Pay in Clinic'}`);
+        console.log(`📡 Mode: ${videoConsultation ? 'Video' : 'In-Clinic'}`);
 
         if (!userData?.email || !docData?.name) {
           console.log("❌ Missing user or doctor info for appointment:", appt._id);
           continue;
         }
 
+        const mode = videoConsultation ? 'Video Consultation (Online)' : 'In-Clinic Appointment';
+        const doctorName = `Dr. ${cleanDoctorName(docData.name)}`;
+
         await sendReminderEmail(
           userData.email,
           userData.name || 'Patient',
-          docData.name || 'Doctor',
+          doctorName,
           slotDate,
-          slotTime
+          slotTime,
+          mode
         );
       }
     } catch (err) {

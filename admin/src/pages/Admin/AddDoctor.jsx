@@ -18,6 +18,7 @@ const AddDoctor = () => {
   const [address1, setAddress1] = useState('');
   const [address2, setAddress2] = useState('');
   const [acceptedInsurances, setAcceptedInsurances] = useState([]);
+  const [languagesKnown, setLanguagesKnown] = useState([]);
 
   const { backendUrl } = useContext(AppContext);
   const { aToken } = useContext(AdminContext);
@@ -42,6 +43,7 @@ const AddDoctor = () => {
       formData.append('degree', degree);
       formData.append('address', JSON.stringify({ line1: address1, line2: address2 }));
       formData.append('acceptedInsurances', JSON.stringify(acceptedInsurances));
+      formData.append('languagesKnown', JSON.stringify(languagesKnown));
 
       const url = backendUrl + '/api/admin/add-doctor';
 
@@ -50,7 +52,7 @@ const AddDoctor = () => {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${aToken}`, // fixed syntax here
+            Authorization: `Bearer ${aToken}`,
           },
         }
       );
@@ -71,13 +73,14 @@ const AddDoctor = () => {
         setAddress1('');
         setAddress2('');
         setAcceptedInsurances([]);
+        setLanguagesKnown([]);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
       if (error.response) {
         console.error('Response error:', error.response.data);
-        toast.error(`Server error: ${error.response.data.message || error.response.statusText}`); // fixed string interpolation
+        toast.error(`Server error: ${error.response.data.message || error.response.statusText}`);
       } else if (error.request) {
         console.error('No response:', error.request);
         toast.error('No response from server.');
@@ -87,6 +90,15 @@ const AddDoctor = () => {
       }
     }
   };
+
+  const globalLanguages = [
+    'English', 'Hindi', 'Telugu', 'Tamil', 'Kannada', 'Malayalam',
+    'Marathi', 'Gujarati', 'Bengali', 'Punjabi', 'Urdu', 'Spanish',
+    'French', 'Arabic', 'German', 'Russian', 'Mandarin', 'Japanese',
+    'Korean', 'Italian', 'Portuguese', 'Persian', 'Turkish', 'Vietnamese',
+    'Thai', 'Greek', 'Hebrew', 'Dutch', 'Polish', 'Ukrainian', 'Czech',
+    'Romanian', 'Swedish', 'Finnish', 'Norwegian', 'Hungarian', 'Indonesian'
+  ];
 
   return (
     <form onSubmit={onSubmitHandler} className="m-5 w-full">
@@ -115,47 +127,22 @@ const AddDoctor = () => {
           <div className="w-full lg:flex-1 flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <p>Your Name</p>
-              <input
-                onChange={(e) => setName(e.target.value)}
-                value={name}
-                className="border rounded px-3 py-2"
-                type="text"
-                placeholder="Doctor name"
-                required
-              />
+              <input onChange={(e) => setName(e.target.value)} value={name} className="border rounded px-3 py-2" type="text" placeholder="Doctor name" required />
             </div>
 
             <div className="flex flex-col gap-1">
               <p>Doctor Email</p>
-              <input
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-                className="border rounded px-3 py-2"
-                type="email"
-                placeholder="Email"
-                required
-              />
+              <input onChange={(e) => setEmail(e.target.value)} value={email} className="border rounded px-3 py-2" type="email" placeholder="Email" required />
             </div>
 
             <div className="flex flex-col gap-1">
               <p>Set Password</p>
-              <input
-                onChange={(e) => setPassword(e.target.value)}
-                value={password}
-                className="border rounded px-3 py-2"
-                type="password"
-                placeholder="Password"
-                required
-              />
+              <input onChange={(e) => setPassword(e.target.value)} value={password} className="border rounded px-3 py-2" type="password" placeholder="Password" required />
             </div>
 
             <div className="flex flex-col gap-1">
               <p>Experience</p>
-              <select
-                onChange={(e) => setExperience(e.target.value)}
-                value={experience}
-                className="border rounded px-2 py-2"
-              >
+              <select onChange={(e) => setExperience(e.target.value)} value={experience} className="border rounded px-2 py-2">
                 {['1 Year','2 Year','3 Year','4 Year','5 Year','6 Year','8 Year','9 Year','10 Year'].map((val) => (
                   <option key={val} value={val}>{val}</option>
                 ))}
@@ -164,14 +151,7 @@ const AddDoctor = () => {
 
             <div className="flex flex-col gap-1">
               <p>Fees</p>
-              <input
-                onChange={(e) => setFees(e.target.value)}
-                value={fees}
-                className="border rounded px-3 py-2"
-                type="number"
-                placeholder="Doctor fees"
-                required
-              />
+              <input onChange={(e) => setFees(e.target.value)} value={fees} className="border rounded px-3 py-2" type="number" placeholder="Doctor fees" required />
             </div>
           </div>
 
@@ -179,11 +159,7 @@ const AddDoctor = () => {
           <div className="w-full lg:flex-1 flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <p>Speciality</p>
-              <select
-                onChange={(e) => setSpeciality(e.target.value)}
-                value={speciality}
-                className="border rounded px-2 py-2"
-              >
+              <select onChange={(e) => setSpeciality(e.target.value)} value={speciality} className="border rounded px-2 py-2">
                 {[
                   'General physician',
                   'Gynecologist',
@@ -191,6 +167,8 @@ const AddDoctor = () => {
                   'Pediatricians',
                   'Neurologist',
                   'Gastroenterologist',
+                  'Cardiologist',
+                  'Pulmonologist'
                 ].map((spec) => (
                   <option key={spec} value={spec}>{spec}</option>
                 ))}
@@ -199,33 +177,13 @@ const AddDoctor = () => {
 
             <div className="flex flex-col gap-1">
               <p>Degree</p>
-              <input
-                onChange={(e) => setDegree(e.target.value)}
-                value={degree}
-                className="border rounded px-3 py-2"
-                type="text"
-                placeholder="Degree"
-                required
-              />
+              <input onChange={(e) => setDegree(e.target.value)} value={degree} className="border rounded px-3 py-2" type="text" placeholder="Degree" required />
             </div>
 
             <div className="flex flex-col gap-1">
               <p>Address</p>
-              <input
-                onChange={(e) => setAddress1(e.target.value)}
-                value={address1}
-                className="border rounded px-3 py-2"
-                type="text"
-                placeholder="Address Line 1"
-                required
-              />
-              <input
-                onChange={(e) => setAddress2(e.target.value)}
-                value={address2}
-                className="border rounded px-3 py-2"
-                type="text"
-                placeholder="Address Line 2"
-              />
+              <input onChange={(e) => setAddress1(e.target.value)} value={address1} className="border rounded px-3 py-2" type="text" placeholder="Address Line 1" required />
+              <input onChange={(e) => setAddress2(e.target.value)} value={address2} className="border rounded px-3 py-2" type="text" placeholder="Address Line 2" />
             </div>
 
             <div className="flex flex-col gap-1">
@@ -257,23 +215,31 @@ const AddDoctor = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <p>About Doctor</p>
-              <textarea
-                onChange={(e) => setAbout(e.target.value)}
-                value={about}
+              <p>Languages Known</p>
+              <select
+                multiple
+                value={languagesKnown}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions).map((opt) => opt.value);
+                  setLanguagesKnown(selected);
+                }}
                 className="border rounded px-3 py-2"
-                placeholder="About the doctor"
-                rows={5}
-                required
-              />
+              >
+                {globalLanguages.map((lang) => (
+                  <option key={lang} value={lang}>{lang}</option>
+                ))}
+              </select>
+              <small className="text-gray-400">Hold Ctrl (Cmd on Mac) to select multiple languages.</small>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <p>About Doctor</p>
+              <textarea onChange={(e) => setAbout(e.target.value)} value={about} className="border rounded px-3 py-2" placeholder="About the doctor" rows={5} required />
             </div>
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="px-8 py-2 rounded bg-primary hover:bg-primary/90 transition text-white mt-6"
-        >
+        <button type="submit" className="px-8 py-2 rounded bg-primary hover:bg-primary/90 transition text-white mt-6">
           Add Doctor
         </button>
       </div>

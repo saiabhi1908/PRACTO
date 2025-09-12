@@ -8,6 +8,7 @@ import { HMSRoomProvider } from '@100mslive/react-sdk';
 import MyAppointmentChat from './pages/MyAppointmentChat';
 
 import { Elements } from '@stripe/react-stripe-js';
+import SymptomChecker from "./pages/SymptomChecker";
 import { loadStripe } from '@stripe/stripe-js';
 import MedicalReports from './pages/MedicalReports';
 
@@ -84,6 +85,7 @@ const App = () => {
           <Route path='/contact' element={<Contact />} />
           <Route path='/appointment/:docId' element={<Appointment />} />
           <Route path='/my-appointments' element={<MyAppointments />} />
+          <Route path="/symptom-checker" element={<SymptomChecker userId={"logged-in-user-id"} />} />
           <Route path='/my-profile' element={<MyProfile />} />
           <Route path='/my-reports' element={<MedicalReports />} />
            <Route path="/my-appointments/:id/chat" element={<MyAppointmentChat />} />

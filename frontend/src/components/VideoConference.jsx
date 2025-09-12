@@ -14,40 +14,55 @@ const VideoConference = () => {
   const peers = useHMSStore(selectPeers);
   const [searchParams] = useSearchParams();
 
-  const roomId = searchParams.get("room") || import.meta.env.VITE_HMS_ROOM_ID;
+  const roomId = searchParams.get("room");
+  const userId = searchParams.get("user");
+  const urlRole = searchParams.get("role");
 
-  // Force role to 'broadcaster' so you can publish your video/audio
-  const role = "broadcaster";
+  const mappedRole =
+    urlRole === "doctor" || urlRole === "patient" ? "broadcaster" : "viewer";
 
   const [joined, setJoined] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
 
-  // Refs to hold video elements for each peer
   const videoRefs = useRef({});
 
+  const checkPermissions = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      return true;
+    } catch (err) {
+      alert("Please allow microphone and camera access to join the call.");
+      return false;
+    }
+  };
+
   const getTokenAndJoin = async () => {
-    if (!userData?._id || !roomId) {
+    const finalUserId = userId || userData?._id;
+    const finalUserName = userData?.name || "Guest";
+
+    if (!finalUserId || !roomId) {
       console.error("Missing user_id or room_id — cannot generate token");
       return;
     }
 
-    try {
-      console.log("Requesting token with:", { user_id: userData._id, room_id: roomId, role });
+    const permissionGranted = await checkPermissions();
+    if (!permissionGranted) return;
 
+    try {
       const response = await axios.post(
         "http://localhost:4000/api/100ms/generate-token",
         {
-          user_id: userData._id,
-          room_id: roomId,
-          role,
+          user_id: finalUserId,
+          room_id:import.meta.env.VITE_HMS_ROOM_ID,
+          role: mappedRole,
         }
       );
 
       const token = response.data.token;
 
       await hmsActions.join({
-        userName: userData.name,
+        userName: finalUserName,
         authToken: token,
         settings: {
           isAudioMuted: false,
@@ -61,7 +76,6 @@ const VideoConference = () => {
     }
   };
 
-  // Attach video tracks whenever peers update
   useEffect(() => {
     peers.forEach((peer) => {
       if (!videoRefs.current[peer.id]) {
@@ -74,19 +88,54 @@ const VideoConference = () => {
     });
   }, [peers, hmsActions]);
 
-  // Toggle local audio (mute/unmute mic)
   const toggleAudio = async () => {
     await hmsActions.setLocalAudioEnabled(isAudioMuted);
     setIsAudioMuted(!isAudioMuted);
   };
 
-  // Toggle local video (hide/show camera)
   const toggleVideo = async () => {
     await hmsActions.setLocalVideoEnabled(isVideoMuted);
     setIsVideoMuted(!isVideoMuted);
   };
 
-  // Leave call
+  const startScreenShare = async () => {
+    try {
+      await hmsActions.setScreenShareEnabled(true);
+    } catch (err) {
+      console.error("Failed to start screen share:", err);
+    }
+  };
+
+  const stopScreenShare = async () => {
+    try {
+      await hmsActions.setScreenShareEnabled(false);
+    } catch (err) {
+      console.error("Failed to stop screen share:", err);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      await axios.post("http://localhost:4000/api/100ms/start-recording", {
+        room_id: roomId,
+      });
+      alert("Recording started");
+    } catch (err) {
+      console.error("Recording error:", err);
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      await axios.post("http://localhost:4000/api/100ms/stop-recording", {
+        room_id: roomId,
+      });
+      alert("Recording stopped");
+    } catch (err) {
+      console.error("Stop recording error:", err);
+    }
+  };
+
   const leaveCall = async () => {
     await hmsActions.leave();
     setJoined(false);
@@ -109,21 +158,29 @@ const VideoConference = () => {
         </button>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {peers.map((peer) => (
-              <div key={peer.id}>
-                <h4 className="font-medium mb-1">{peer.name}</h4>
+          {/* 📺 Video layout */}
+          <div className="relative h-[70vh] bg-gray-200 rounded overflow-hidden">
+            {peers.map((peer, index) => (
+              <div
+                key={peer.id}
+                className={`absolute ${
+                  index === 0 ? "w-full h-full" : "w-40 h-40 bottom-4 right-4"
+                }`}
+              >
                 <video
                   ref={videoRefs.current[peer.id]}
                   autoPlay
-                  muted={peer.isLocal} // mute your own video locally to avoid echo
-                  className="w-full rounded shadow"
+                  muted={peer.isLocal}
+                  className="w-full h-full rounded shadow"
                 />
+                <p className="text-xs text-white bg-black bg-opacity-60 px-2 py-0.5 absolute bottom-1 left-1 rounded">
+                  {peer.name}
+                </p>
               </div>
             ))}
           </div>
 
-          <div className="space-x-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4">
             <button
               onClick={toggleAudio}
               className="bg-yellow-500 px-3 py-1 rounded text-white"
@@ -135,6 +192,30 @@ const VideoConference = () => {
               className="bg-purple-500 px-3 py-1 rounded text-white"
             >
               {isVideoMuted ? "Show Video" : "Hide Video"}
+            </button>
+            <button
+              onClick={startScreenShare}
+              className="bg-blue-600 px-3 py-1 rounded text-white"
+            >
+              Share Screen
+            </button>
+            <button
+              onClick={stopScreenShare}
+              className="bg-blue-400 px-3 py-1 rounded text-white"
+            >
+              Stop Sharing
+            </button>
+            <button
+              onClick={startRecording}
+              className="bg-black px-3 py-1 rounded text-white"
+            >
+              Start Recording
+            </button>
+            <button
+              onClick={stopRecording}
+              className="bg-gray-800 px-3 py-1 rounded text-white"
+            >
+              Stop Recording
             </button>
             <button
               onClick={leaveCall}

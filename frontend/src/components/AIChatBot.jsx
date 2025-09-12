@@ -86,82 +86,79 @@ const AIChatBot = () => {
     setUserInput("");
     setLoading(true);
 
+    const userLang = navigator.language.split("-")[0]; // e.g., 'hi', 'fr'
+
+    // Handle hospital search with location
     if (userInput.toLowerCase().includes("find a hospital") || userInput.toLowerCase().includes("nearest hospital")) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-
           axios
             .get(`http://localhost:4000/api/places/nearby?lat=${latitude}&lng=${longitude}`)
             .then((response) => {
               const places = response.data.results;
               const reply = places.length
-                ? places
-                    .slice(0, 5)
-                    .map((place) => `${place.name}, ${place.vicinity}`)
-                    .join("\n")
+                ? places.slice(0, 5).map((place) => `${place.name}, ${place.vicinity}`).join("\n")
                 : "No hospitals found nearby.";
-
               setMessages([...newMessages, { sender: "bot", text: reply }]);
+              setLoading(false);
             })
             .catch(() => {
               setMessages([...newMessages, { sender: "bot", text: "Sorry, couldn't fetch hospital data." }]);
+              setLoading(false);
             });
         },
         () => {
           setMessages([...newMessages, { sender: "bot", text: "Please enable location access." }]);
+          setLoading(false);
         }
       );
-    } else {
-      try {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-  console.log("Using API key:", apiKey); // ✅ Add this line
+      return;
+    }
 
-  if (!apiKey) {
-    console.error("Missing API key.");
-    setMessages([...newMessages, { sender: "bot", text: "API key not set. Please check your .env file." }]);
-    setLoading(false);
-    return;
-  }
+    try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
 
-
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-  "Content-Type": "application/json",
-  "Authorization": `Bearer ${apiKey}`,
-},
-
-          body: JSON.stringify({
-            model: "mistralai/mistral-7b-instruct",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a helpful assistant for the Practo platform. Help users with booking doctor appointments, managing prescriptions, and using the platform. Keep responses short, clear, and focused. Avoid long paragraphs or unrelated content.",
-              },
-              ...newMessages.map((msg) => ({
-                role: msg.sender === "user" ? "user" : "assistant",
-                content: msg.text,
-              })),
-            ],
-          }),
-        });
-
-        const data = await response.json();
-        console.log("OpenRouter API response:", data);
-
-        if (data.choices && data.choices.length > 0) {
-          const botReply = data.choices[0].message.content;
-          setMessages([...newMessages, { sender: "bot", text: botReply.trim() }]);
-        } else {
-          const errorMessage = data.error?.message || "No response received from the model.";
-          setMessages([...newMessages, { sender: "bot", text: `Sorry, ${errorMessage}` }]);
-        }
-      } catch (error) {
-        console.error("Chatbot error:", error);
-        setMessages([...newMessages, { sender: "bot", text: "Error: Could not reach chatbot API." }]);
+      if (!apiKey) {
+        console.error("Missing API key.");
+        setMessages([...newMessages, { sender: "bot", text: "API key not set. Please check your .env file." }]);
+        setLoading(false);
+        return;
       }
+
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "mistralai/mistral-7b-instruct", // ✅ Multilingual model
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a helpful AI assistant for the Practo platform. Detect the user's language and reply in the same language. Help users book doctor appointments, manage reports, and navigate the app. Respond clearly and concisely.",
+            },
+            ...newMessages.map((msg) => ({
+              role: msg.sender === "user" ? "user" : "assistant",
+              content: msg.text,
+            })),
+          ],
+        }),
+      });
+
+      const data = await response.json();
+      if (data.choices && data.choices.length > 0) {
+        const botReply = data.choices[0].message.content;
+        setMessages([...newMessages, { sender: "bot", text: botReply.trim() }]);
+      } else {
+        const errorMessage = data.error?.message || "No response received from the model.";
+        setMessages([...newMessages, { sender: "bot", text: `Sorry, ${errorMessage}` }]);
+      }
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      setMessages([...newMessages, { sender: "bot", text: "Error: Could not reach chatbot API." }]);
     }
 
     setLoading(false);

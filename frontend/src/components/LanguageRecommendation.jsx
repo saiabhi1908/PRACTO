@@ -49,7 +49,11 @@ const LanguageRecommendation = () => {
             >
               <p className="font-bold text-blue-700 underline">{doc.name}</p>
               <p>{doc.speciality}</p>
-              <p className="text-sm text-gray-500">Speaks: {doc.languages.join(", ")}</p>
+              {(doc.languagesKnown || []).length > 0 && (
+                <p className="text-sm text-gray-500">
+                  Speaks: {doc.languagesKnown.join(", ")}
+                </p>
+              )}
             </li>
           ))}
         </ul>

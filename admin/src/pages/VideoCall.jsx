@@ -1,10 +1,13 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { HMSRoomProvider } from "@100mslive/react-sdk";
+
 import VideoConference from "../components/VideoConference";
 
 const VideoCall = () => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+
   const roomId = searchParams.get("room");
   const userId = searchParams.get("user");
   const role = searchParams.get("role");

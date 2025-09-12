@@ -8,14 +8,19 @@ import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
 
 import userRouter from "./routes/userRoute.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import doctorRouter from "./routes/doctorRoute.js";
 import adminRouter from "./routes/adminRoute.js";
 import placesRouter from "./routes/places.js";
 import medicalReportRoutes from './routes/medicalReportRoutes.js';
 import videoRouter from "./routes/videoRoute.js";
 import insuranceRoutes from './routes/insuranceRoutes.js';
-
+import symptomCheckerRoutes from "./routes/symptomChecker.js";
 import sendEmail from "./utils/emailService.js";
+import voiceRoutes from "./routes/voiceRoutes.js";
+
+// ⭐ Add this import
+import appointmentRouter from "./routes/appointmentRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -38,10 +43,16 @@ app.use("/api/user", userRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/doctor", doctorRouter);
 app.use("/api/places", placesRouter);
-app.use('/api/insurance', insuranceRoutes);
+app.use("/api/insurance", insuranceRoutes);
 app.use("/api/100ms", videoRouter);
-app.use('/api/reports', medicalReportRoutes);
-app.use('/api/chat', chatRoutes);
+app.use("/api/reports", medicalReportRoutes);
+app.use("/api/symptom-checker", symptomCheckerRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/voice", voiceRoutes);
+app.use("/api/reviews", reviewRoutes);
+
+// ⭐ Mount appointment routes here
+app.use("/api/appointments", appointmentRouter);
 
 // Test email route
 app.get("/test-email", async (req, res) => {

@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import Insurance from "../models/Insurance.js"; // ✅ Insurance model
+import Review from "../models/reviewModel.js";   // ✅ Review model
 
 // ✅ Book appointment (Insurance Mandatory with Discounted Fees)
 const bookAppointment = async (req, res) => {
@@ -29,7 +30,7 @@ const bookAppointment = async (req, res) => {
     if (insuranceData.coverageDetails?.toLowerCase().includes("full")) {
       finalFee = 0;
     } else {
-      finalFee = doctor.fees * 0.10; // 5% discount for partial coverage
+      finalFee = doctor.fees * 0.10; // 10% fee for partial coverage
     }
 
     // ✅ Convert date + time to timestamp
@@ -128,7 +129,7 @@ const appointmentComplete = async (req, res) => {
   }
 };
 
-// UPDATED doctorList to support insuranceProvider query param filtering
+// UPDATED doctorList to support insuranceProvider query param filtering + ratings + review count
 const doctorList = async (req, res) => {
   try {
     const { insuranceProvider } = req.query;
@@ -138,7 +139,20 @@ const doctorList = async (req, res) => {
       : {};
 
     const doctors = await doctorModel.find(query).select(['-password', '-email']);
-    res.json({ success: true, doctors });
+
+    // Add average rating and number of reviews to each doctor
+    const doctorsWithRatings = await Promise.all(
+      doctors.map(async (doc) => {
+        const reviews = await Review.find({ doctor: doc._id });
+        const reviewsCount = reviews.length;
+        const avgRating = reviewsCount > 0
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewsCount
+          : 0;
+        return { ...doc._doc, rating: avgRating, reviewsCount }; // ✅ include reviewsCount
+      })
+    );
+
+    res.json({ success: true, doctors: doctorsWithRatings });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -215,11 +229,11 @@ export {
   loginDoctor,
   appointmentsDoctor,
   appointmentCancel,
-  doctorList,         // UPDATED export
+  doctorList,         // ✅ now includes rating + reviewsCount
   changeAvailablity,
   appointmentComplete,
   doctorDashboard,
   doctorProfile,
   updateDoctorProfile,
-  bookAppointment,    // Updated export
+  bookAppointment,
 };

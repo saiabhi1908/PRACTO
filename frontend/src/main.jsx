@@ -4,11 +4,14 @@ import App from './App.jsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
 import AppContextProvider from './context/AppContext.jsx'
+import ThemeContextProvider from './context/ThemeContext.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AppContextProvider>
-      <App />
+      <ThemeContextProvider>
+        <App />
+      </ThemeContextProvider>
     </AppContextProvider>
-  </BrowserRouter>,
+  </BrowserRouter>
 )

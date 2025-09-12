@@ -274,22 +274,25 @@ const getAppointmentById = async (req, res) => {
 
 const bookAppointment = async (req, res) => {
   try {
-    const { userId, docId, slotDate, slotTime, insuranceId } = req.body;
+    const {
+      userId,
+      docId,
+      slotDate,
+      slotTime,
+      insuranceId,
+      payInClinic,
+      isVideoConsultation
+    } = req.body;
 
     console.log("📌 DOC ID RECEIVED =", docId);
 
     const doc = await doctorModel.findById(docId).select("-password");
-
-    console.log("📌 Fetched Doctor =", doc);
-    console.log("📌 doc.fees =", doc?.fees);
-    console.log("📌 doc.fee =", doc?.fee);
 
     if (!doc || !doc.available) {
       return res.json({ success: false, message: "Doctor not found or unavailable" });
     }
 
     const baseFee = typeof doc.fees === 'number' ? doc.fees : doc.fee;
-
     if (!baseFee || isNaN(baseFee)) {
       return res.status(400).json({ success: false, message: "Doctor fee is missing or invalid." });
     }
@@ -309,24 +312,28 @@ const bookAppointment = async (req, res) => {
     if (insuranceId) {
       const insurance = await Insurance.findById(insuranceId);
       selectedInsurance = insurance?.toObject();
-      finalAmount = baseFee * 0.1; // Apply insurance discount
+      finalAmount = baseFee * 0.1; // 90% off
     }
 
     if (isNaN(finalAmount)) {
       return res.status(400).json({ success: false, message: "Fee calculation error" });
     }
 
-    // ✅ Correct and reliable way to build exact appointment timestamp
+    // ✅ Enforce rule: Video Consultations require online payment
+    if (isVideoConsultation && payInClinic) {
+      return res.status(400).json({
+        success: false,
+        message: "Video consultations require online payment."
+      });
+    }
+
+    // Build appointment datetime
     const [day, month, year] = slotDate.split('_').map(Number);
     const [time, modifier] = slotTime.split(' ');
     let [hours, minutes] = time.split(':').map(Number);
-
     if (modifier.toLowerCase() === 'pm' && hours !== 12) hours += 12;
     if (modifier.toLowerCase() === 'am' && hours === 12) hours = 0;
-
-    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0); // exact time
-
-    console.log("📆 Final appointment date object:", appointmentDateTime.toLocaleString());
+    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0);
 
     const appointment = new appointmentModel({
       userId,
@@ -338,41 +345,40 @@ const bookAppointment = async (req, res) => {
       slotTime,
       date: appointmentDateTime,
       insurance: selectedInsurance || undefined,
+      payment: payInClinic ? false : undefined, // leave undefined for Stripe until verified
+      videoConsultation: isVideoConsultation || false
     });
 
     await appointment.save();
     await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
-    // ✅ Send confirmation email to user
-    if (user?.email) {
-      const subject = '✅ Appointment Confirmation - Prescripta HealthCare';
+    // ✅ Confirmation Email
+    if (user?.email && (!isVideoConsultation || (isVideoConsultation && !payInClinic))) {
+  const subject = '✅ Appointment Confirmed - Prescripta HealthCare';
+
       const message = `
 Hi ${user.name || 'Patient'},
 
-Your appointment has been successfully booked with Dr. ${doc.name}.
+Your appointment with Dr. ${doc.name} is confirmed.
 
 🗓 Date: ${slotDate}
 ⏰ Time: ${slotTime}
-💳 Fee to be Paid: ${Number(finalAmount).toFixed(2)} ${process.env.CURRENCY?.toUpperCase() || 'USD'}
+💳 Fee: ${Number(finalAmount).toFixed(2)} ${process.env.CURRENCY?.toUpperCase() || 'USD'}
+${isVideoConsultation ? '📹 This is a video consultation.\n' : ''}
+${payInClinic ? '💡 Please pay at the clinic reception during your visit.\n' : ''}
 
 Thank you for choosing Prescripta HealthCare.
-
-Regards,  
-Prescripta HealthCare Team
       `;
       await sendEmail(user.email, subject, message);
     }
 
     return res.json({ success: true, message: "Appointment Booked", appointment });
+
   } catch (error) {
     console.error("❌ bookAppointment error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
-
-
 
 
 const cancelAppointment = async (req, res) => {
@@ -449,6 +455,80 @@ const listAppointment = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
+const switchAppointmentMode = async (req, res) => {
+  try {
+    const { appointmentId, newMode } = req.body;
+
+    const appointment = await appointmentModel.findById(appointmentId);
+    if (!appointment || appointment.cancelled) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    // Validate switch
+    if (newMode !== "video" && newMode !== "in-clinic") {
+      return res.status(400).json({ success: false, message: "Invalid mode" });
+    }
+
+    const alreadyPaid = appointment.payment === true;
+
+    // Video consultation switch
+    if (newMode === "video") {
+      if (!alreadyPaid) {
+        appointment.videoConsultation = true;
+        await appointment.save();
+        return res.json({ success: true, message: "Switched to video mode. Please pay online." });
+      } else {
+        appointment.videoConsultation = true;
+        await appointment.save();
+
+        // Send confirmation email
+        if (appointment.userData?.email) {
+          await sendEmail(appointment.userData.email, '✅ Video Appointment Confirmed', `
+Hi ${appointment.userData.name},
+
+Your appointment with Dr. ${appointment.docData.name} has been changed to a video consultation.
+
+🗓 Date: ${appointment.slotDate}  
+⏰ Time: ${appointment.slotTime}  
+✅ Paid already — Join link will be available at the appointment time.
+
+Prescripta HealthCare
+          `);
+        }
+
+        return res.json({ success: true, message: "Switched to video mode. You can join directly." });
+      }
+    }
+
+    // In-clinic switch
+    if (newMode === "in-clinic") {
+      appointment.videoConsultation = false;
+      await appointment.save();
+
+      if (appointment.userData?.email) {
+        await sendEmail(appointment.userData.email, '✅ In-Clinic Appointment Confirmed', `
+Hi ${appointment.userData.name},
+
+Your appointment with Dr. ${appointment.docData.name} has been changed to an in-clinic visit.
+
+🗓 Date: ${appointment.slotDate}  
+⏰ Time: ${appointment.slotTime}  
+💡 You may pay in clinic or keep your online payment.
+
+Prescripta HealthCare
+        `);
+      }
+
+      return res.json({ success: true, message: "Switched to in-clinic mode." });
+    }
+
+  } catch (err) {
+    console.error("❌ switchAppointmentMode error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 
 // ========= PAYMENTS =========
 
@@ -568,6 +648,75 @@ Prescripta HealthCare Team
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+const rescheduleAppointment = async (req, res) => {
+  try {
+    const { appointmentId, newSlotDate, newSlotTime } = req.body;
+
+    const appointment = await appointmentModel.findById(appointmentId);
+    if (!appointment || appointment.cancelled) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    const doctor = await doctorModel.findById(appointment.docId);
+    if (!doctor) return res.status(404).json({ success: false, message: "Doctor not found" });
+
+    const slots_booked = { ...doctor.slots_booked };
+
+    // Remove old slot
+    const oldSlotList = slots_booked[appointment.slotDate] || [];
+    slots_booked[appointment.slotDate] = oldSlotList.filter(t => t !== appointment.slotTime);
+    if (slots_booked[appointment.slotDate].length === 0) delete slots_booked[appointment.slotDate];
+
+    // Add new slot
+    if (slots_booked[newSlotDate]?.includes(newSlotTime)) {
+      return res.status(400).json({ success: false, message: "New slot already booked" });
+    }
+    slots_booked[newSlotDate] = [...(slots_booked[newSlotDate] || []), newSlotTime];
+
+    // Update doctor slot record
+    await doctorModel.findByIdAndUpdate(doctor._id, { slots_booked });
+
+    // Update appointment details
+    appointment.slotDate = newSlotDate;
+    appointment.slotTime = newSlotTime;
+
+    // ✅ Set correct appointment.date for reminder scheduler
+    const [day, month, year] = newSlotDate.split('_').map(Number);
+    const [time, meridian] = newSlotTime.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (meridian.toLowerCase() === 'pm' && hours !== 12) hours += 12;
+    if (meridian.toLowerCase() === 'am' && hours === 12) hours = 0;
+
+    appointment.date = new Date(year, month - 1, day, hours, minutes, 0);
+
+    await appointment.save();
+
+    // Send reschedule confirmation email
+    if (appointment.userData?.email) {
+      const subject = "🕐 Appointment Rescheduled - Prescripta HealthCare";
+      const message = `
+Hi ${appointment.userData.name},
+
+Your appointment with Dr. ${appointment.docData.name} has been rescheduled.
+
+New Slot:
+🗓 ${newSlotDate}
+⏰ ${newSlotTime}
+
+Thank you for choosing Prescripta HealthCare.
+      `;
+      await sendEmail(appointment.userData.email, subject, message);
+    }
+
+    res.json({ success: true, message: "Appointment rescheduled", appointment });
+  } catch (error) {
+    console.error("❌ rescheduleAppointment error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // ========= EXPORT ALL =========
 
 export {
@@ -584,6 +733,8 @@ export {
     resetPassword,
     verifyOtp,
     sendResetOTP,
+    rescheduleAppointment,
     getAppointmentById,
-    verifyResetOTP
+    verifyResetOTP,
+    switchAppointmentMode
 };

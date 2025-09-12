@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@100mslive/react-sdk": "^0.10.35",
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
+    "html2canvas": "^1.4.1",
     "openai": "^4.91.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

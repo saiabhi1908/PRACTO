@@ -12,6 +12,7 @@ import {
 } from '../controllers/doctorController.js';
 import authDoctor from '../middleware/authDoctor.js';
 import Doctor from '../models/doctorModel.js';
+import { matchDoctors } from "../controllers/matchController.js";
 
 const doctorRouter = express.Router();
 
@@ -24,6 +25,7 @@ doctorRouter.post("/complete-appointment", authDoctor, appointmentComplete);
 doctorRouter.get("/dashboard", authDoctor, doctorDashboard);
 doctorRouter.get("/profile", authDoctor, doctorProfile);
 doctorRouter.post("/update-profile", authDoctor, updateDoctorProfile);
+doctorRouter.post("/match", matchDoctors);
 
 // Seed sample doctors (only use in development/test)
 doctorRouter.post("/seed", async (req, res) => {
@@ -63,13 +65,14 @@ doctorRouter.get("/by-language", async (req, res) => {
   if (!language) return res.status(400).json({ message: "Language parameter is required" });
 
   try {
-    const doctors = await Doctor.find({ languages: { $in: [language] } });
+    const doctors = await Doctor.find({ languagesKnown: { $in: [language] } });
     res.json(doctors);
   } catch (error) {
     console.error("Error fetching doctors by language:", error);
     res.status(500).json({ error: "Failed to fetch doctors" });
   }
 });
+
 
 // Get nearby doctors
 doctorRouter.get("/nearby", async (req, res) => {

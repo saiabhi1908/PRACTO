@@ -2,13 +2,13 @@ import React, { useContext, useEffect, useState } from 'react';
 import { assets } from '../../assets/assets';
 import { AdminContext } from '../../context/AdminContext';
 import { AppContext } from '../../context/AppContext';
-import DoctorChat from '../../components/DoctorChat'; // ✅ import
+import DoctorChat from '../../components/DoctorChat';
 
 const Dashboard = () => {
   const { aToken, getDashData, cancelAppointment, dashData } = useContext(AdminContext);
   const { slotDateFormat } = useContext(AppContext);
 
-  const [openChatId, setOpenChatId] = useState(null); // ✅ state for toggling chat
+  const [openChatId, setOpenChatId] = useState(null);
 
   useEffect(() => {
     if (aToken) {
@@ -56,8 +56,9 @@ const Dashboard = () => {
                 <img className='rounded-full w-10' src={item.docData.image} alt="" />
                 <div className='flex-1 text-sm'>
                   <p className='text-gray-800 font-medium'>{item.docData.name}</p>
-                  <p className='text-gray-600 '>Booking on {slotDateFormat(item.slotDate)}</p>
+                  <p className='text-gray-600'>Booking on {slotDateFormat(item.slotDate)}</p>
                 </div>
+
                 {item.cancelled ? (
                   <p className='text-red-400 text-xs font-medium'>Cancelled</p>
                 ) : item.isCompleted ? (
@@ -70,17 +71,30 @@ const Dashboard = () => {
                       src={assets.cancel_icon}
                       alt=""
                     />
+
                     <button
                       onClick={() => setOpenChatId(openChatId === item._id ? null : item._id)}
-                      className="ml-4 px-2 py-1 bg-blue-500 text-white text-xs rounded"
+                      className="ml-2 px-2 py-1 bg-blue-500 text-white text-xs rounded"
                     >
                       {openChatId === item._id ? 'Close Chat' : 'Open Chat'}
                     </button>
+
+                    {/* ✅ New Join Video Call Button */}
+{item.videoConsultation && item.payment && (
+  <button
+    onClick={() =>
+      window.open(`/video-call?room=${item._id}&user=${item.docData._id}&role=doctor`, "_blank")
+    }
+    className="ml-2 px-2 py-1 bg-green-600 text-white text-xs rounded"
+  >
+    Join Video Call
+  </button>
+)}
+
                   </>
                 )}
               </div>
 
-              {/* ✅ Chat Box */}
               {openChatId === item._id && (
                 <div className="ml-20 my-2 bg-gray-50 p-4 border rounded-md">
                   <DoctorChat appointmentId={item._id} doctorId={item.docData._id} />
@@ -90,7 +104,6 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
-
     </div>
   );
 };

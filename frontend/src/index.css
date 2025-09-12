@@ -5,19 +5,29 @@
 @tailwind utilities;
 
 * {
-    font-family: Outfit;
+  font-family: Outfit;
 }
 
 .active hr {
-    @apply block
+  @apply block;
 }
 
 @media (max-width:740px) {
-    .active  p{
-       @apply text-white bg-primary
-    }
+  .active p {
+    @apply text-white bg-primary;
+  }
 }
 
 ::-webkit-scrollbar {
-    @apply hidden
+  @apply hidden;
+}
+
+/* ✅ Smooth transitions + dark mode support */
+body {
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.dark body {
+  background-color: #0f172a; /* Tailwind slate-900 */
+  color: #f1f5f9;            /* Tailwind slate-100 */
 }
