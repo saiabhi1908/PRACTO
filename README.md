@@ -80,7 +80,7 @@ It allows patients to search for doctors, book appointments (in-person or virtua
 
 ### 🔹 Doctor Ratings & Reviews
 - Patients can rate doctors after their appointment (/5 stars)  
-- Average rating is calculated and displayed (e.g., 4.5 from 2 reviews)  
+- Average rating is calculated and displayed
 - Ratings and reviews are visible throughout the platform, including in voice assistant suggestions  
 
 ---
