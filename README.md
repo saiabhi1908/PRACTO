@@ -6,7 +6,6 @@ Practo is a smart online doctor appointment system that makes healthcare fast, e
 With AI-powered doctor matchmaking, smart symptom checking, and a voice assistant, Practo guides patients to the best specialists, streamlines appointment booking, and enhances user experience. Doctors and admins benefit from robust dashboards, automated reminders, and easy report management.
 
 Practo combines cutting-edge technology with user-focused design, creating a complete digital healthcare ecosystem that saves time, improves care, and empowers patients to make informed decisions.
----
 
 ## ✨ Features
 
