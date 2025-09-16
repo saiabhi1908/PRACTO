@@ -66,7 +66,7 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 
 ### 🔹 AI Doctor Matchmaking
 - Patients can enter their symptoms
-- The system suggests the most suitable doctors with correct specialization
+- Then the system suggests the most suitable doctors with correct specialization, based on the symptoms entered by the patients
 - Each suggestion includes an AI match score to help choose the best doctor
 
 ### 🔹 Voice Assistant Appointment Booking
@@ -82,7 +82,7 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 ### 🔹 Doctor Ratings & Reviews
 - Patients can rate doctors after their appointment (/5 stars)  
 - Average rating is calculated and displayed
-- Ratings and reviews are visible throughout the platform, including in voice assistant suggestions  
+- Ratings and reviews are visible throughout the platform, including in voice assistant system  
 
 ---
 
