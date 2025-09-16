@@ -65,7 +65,11 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 ## 🆕 Newly Added Features
 
 ### 🔹 AI Doctor Matchmaking
+
+- Patients can type out their symptoms
+
 - Patients can enter their symptoms
+
 - Then the system suggests the most suitable doctors with correct specialization, based on the symptoms entered by the patients
 - Each suggestion includes an AI match score to help choose the best doctor
 
@@ -74,7 +78,7 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 **Example flow:**
 1. Say “Book appointment with a pediatrician”  
 2. System displays pediatricians with ratings and number of reviews  
-3. Patient selects a doctor (e.g., “Choose Dr. Jeffrey”)  
+3. Patient selects a doctor (e.g., “Choose Dr. John”)  
 4. Available slots with date and time are displayed; patient selects preferred slot  
 5. Insurance options are shown from the database; patient selects  
 6. Appointment is confirmed automatically
@@ -82,7 +86,11 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 ### 🔹 Doctor Ratings & Reviews
 - Patients can rate doctors after their appointment (/5 stars)  
 - Average rating is calculated and displayed
+
+- Ratings and reviews are visible throughout the platform, including in the voice assistant system  
+
 - Ratings and reviews are visible throughout the platform, including in voice assistant system  
+
 
 ---
 
