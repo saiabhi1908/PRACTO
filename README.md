@@ -87,7 +87,7 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 - Patients can rate doctors after their appointment (/5 stars)  
 - Average rating is calculated and displayed
 
-- Ratings and reviews are visible throughout the platform, including in the voice assistant system
+- Ratings and reviews of the doctors are visible throughout the platform, including in the voice assistant system
 
 ## 🛠️ Tech Stack
 - **Frontend:** React.js, Tailwind CSS  
