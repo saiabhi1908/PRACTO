@@ -12,6 +12,7 @@ import SymptomChecker from "./pages/SymptomChecker";
 import { loadStripe } from '@stripe/stripe-js';
 import MedicalReports from './pages/MedicalReports';
 
+
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import VoiceAssistant from './components/VoiceAssistant';
@@ -35,8 +36,7 @@ import AdminPanel from './pages/AdminPanel';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyOtp from './pages/VerifyOtp';
 import ResetPassword from './pages/ResetPassword';
-import PaymentPage from './pages/PaymentPage';
-import EmergencyMode from './pages/EmergencyMode'; // ✅ NEW IMPORT
+import PaymentPage from './pages/PaymentPage'; // ✅ Ensure this is imported
 
 // ✅ Stripe public key from .env
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -65,7 +65,7 @@ const App = () => {
 
   return (
     <Elements stripe={stripePromise}>
-      <div className="mx-4 sm:mx-[10%]">
+      <div className='mx-4 sm:mx-[10%]'>
         <ToastContainer />
         <Navbar />
         <VoiceAssistant />
@@ -77,42 +77,36 @@ const App = () => {
         )}
 
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/doctors" element={<Doctors />} />
-          <Route path="/doctors/:speciality" element={<Doctors />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/appointment/:docId" element={<Appointment />} />
-          <Route path="/my-appointments" element={<MyAppointments />} />
-          <Route
-            path="/symptom-checker"
-            element={<SymptomChecker userId={"logged-in-user-id"} />}
-          />
-          <Route path="/my-profile" element={<MyProfile />} />
-          <Route path="/my-reports" element={<MedicalReports />} />
-          <Route
-            path="/my-appointments/:id/chat"
-            element={<MyAppointmentChat />}
-          />
-          <Route path="/verify" element={<Verify />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/setup-2fa" element={<Setup2FA />} />
-          <Route path="/verify-2fa" element={<Verify2FA />} />
+          <Route path='/' element={<Home />} />
+          <Route path='/doctors' element={<Doctors />} />
+          <Route path='/doctors/:speciality' element={<Doctors />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/about' element={<About />} />
+          <Route path='/contact' element={<Contact />} />
+          <Route path='/appointment/:docId' element={<Appointment />} />
+          <Route path='/my-appointments' element={<MyAppointments />} />
+          <Route path="/symptom-checker" element={<SymptomChecker userId={"logged-in-user-id"} />} />
+          <Route path='/my-profile' element={<MyProfile />} />
+          <Route path='/my-reports' element={<MedicalReports />} />
+           <Route path="/my-appointments/:id/chat" element={<MyAppointmentChat />} />
+
+          <Route path='/verify' element={<Verify />} />
+          <Route path='/admin' element={<AdminPanel />} />
+          <Route path='/setup-2fa' element={<Setup2FA />} />
+          <Route path='/verify-2fa' element={<Verify2FA />} />
           <Route path="/insurance" element={<Insurance />} />
-          <Route path="/payment-page" element={<PaymentPage />} />
+          <Route path='/payment-page' element={<PaymentPage />} /> {/* ✅ Add this route */}
           <Route
-            path="/video-call"
+            path='/video-call'
             element={
               <HMSRoomProvider>
                 <VideoCall />
               </HMSRoomProvider>
             }
           />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/emergency" element={<EmergencyMode />} /> {/* ✅ NEW ROUTE */}
+          <Route path='/forgot-password' element={<ForgotPassword />} />
+          <Route path='/verify-otp' element={<VerifyOtp />} />
+          <Route path='/reset-password' element={<ResetPassword />} />
         </Routes>
 
         <Footer />
