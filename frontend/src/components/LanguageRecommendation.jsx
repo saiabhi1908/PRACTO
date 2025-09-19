@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import axios from "axios";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const LanguageRecommendation = () => {
@@ -18,13 +18,13 @@ const LanguageRecommendation = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded shadow mt-6">
-      <h2 className="text-xl font-semibold mb-3">Find Doctors by Language</h2>
+    <div className="p-4 mt-6 bg-white rounded shadow">
+      <h2 className="mb-3 text-xl font-semibold">Find Doctors by Language</h2>
       <div className="flex items-center gap-2">
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
-          className="border px-2 py-1 rounded w-60"
+          className="px-2 py-1 border rounded w-60"
         >
           <option value="">Select Language</option>
           <option value="Hindi">Hindi</option>
@@ -34,7 +34,7 @@ const LanguageRecommendation = () => {
           <option value="Mandarin">Mandarin</option>
           {/* Add more languages as needed */}
         </select>
-        <button onClick={handleSearch} className="bg-blue-500 text-white px-4 py-1 rounded">
+        <button onClick={handleSearch} className="px-4 py-1 text-white bg-blue-500 rounded">
           Search
         </button>
       </div>
