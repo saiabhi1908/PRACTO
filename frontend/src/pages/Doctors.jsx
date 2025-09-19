@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { AppContext } from '../context/AppContext';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -6,6 +6,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 // Backend URLs
 const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:4000';
 const FLASK_URL = 'http://localhost:5001';
+
+// Speech Recognition setup
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
 const Doctors = () => {
   const { speciality } = useParams();
@@ -21,6 +24,51 @@ const Doctors = () => {
   // AI Matchmaking states
   const [query, setQuery] = useState('');
   const [aiMatches, setAiMatches] = useState([]);
+  const [listening, setListening] = useState(false);   // voice recording state
+  const recognitionRef = useRef(null);                 // voice recognition instance
+
+  // 🔹 Setup voice recognition
+  useEffect(() => {
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      let final = "";
+      for (let i = 0; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) final += res[0].transcript + " ";
+        else interim += res[0].transcript + " ";
+      }
+      setQuery(prev => (final ? prev + final : prev));
+    };
+
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+
+    recognitionRef.current = recognition;
+
+    return () => recognition.stop?.();
+  }, []);
+
+  const startListening = () => {
+    if (!recognitionRef.current) {
+      alert("SpeechRecognition not supported in this browser.");
+      return;
+    }
+    setQuery("");
+    recognitionRef.current.start();
+    setListening(true);
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  };
 
   // Fetch doctors from backend
   const fetchDoctors = async (insurance) => {
@@ -145,6 +193,7 @@ const Doctors = () => {
         </select>
       </div>
 
+      {/* AI Search Box with Voice Button */}
       <div className="mb-4">
         <textarea
           className="border p-2 w-full"
@@ -152,37 +201,50 @@ const Doctors = () => {
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
-        <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={findMatches}>
+
+        {/* 🎙️ Voice button */}
+        {SpeechRecognition && (
+          <button
+            onClick={() => (listening ? stopListening() : startListening())}
+            className={`mt-2 px-4 py-2 rounded ${listening ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
+          >
+            {listening ? "Stop Recording" : "🎙️ Speak Symptoms"}
+          </button>
+        )}
+
+        <button
+          className="mt-2 ml-2 px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={findMatches}
+        >
           Find Best Matches (AI)
         </button>
       </div>
 
-{/* AI Suggested Doctors */}
-{aiMatches.length > 0 && (
-  <div className="mt-4">
-    <h3 className="text-xl font-semibold mb-2">AI Suggested Doctors</h3>
-    <div className="grid grid-cols-auto gap-4">
-      {aiMatches.map(doc => (
-        <div key={doc.doctor_id} className="border p-4 rounded">
-          <p className="font-bold">{doc.name}</p>
+      {/* AI Suggested Doctors */}
+      {aiMatches.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-xl font-semibold mb-2">AI Suggested Doctors</h3>
+          <div className="grid grid-cols-auto gap-4">
+            {aiMatches.map(doc => (
+              <div key={doc.doctor_id} className="border p-4 rounded">
+                <p className="font-bold">{doc.name}</p>
 
-          {/* ✅ Show speciality */}
-          <p className="text-sm text-gray-600">
-            Speciality: {Array.isArray(doc.specialization) ? doc.specialization.join(', ') : doc.specialization || doc.speciality || 'N/A'}
-          </p>
+                <p className="text-sm text-gray-600">
+                  Speciality: {Array.isArray(doc.specialization) ? doc.specialization.join(', ') : doc.specialization || doc.speciality || 'N/A'}
+                </p>
 
-          <p>Languages: {doc.languagesKnown?.join(", ") || 'N/A'}</p>
-          <p>Insurance: {doc.acceptedInsurances?.join(", ") || 'N/A'}</p>
-          {renderStars(doc.rating, doc.reviewsCount)}
-          <p className="text-xs text-gray-500 mt-1">AI Score: {doc.aiScore?.toFixed(2)}</p>
+                <p>Languages: {doc.languagesKnown?.join(", ") || 'N/A'}</p>
+                <p>Insurance: {doc.acceptedInsurances?.join(", ") || 'N/A'}</p>
+                {renderStars(doc.rating, doc.reviewsCount)}
+                <p className="text-xs text-gray-500 mt-1">AI Score: {doc.aiScore?.toFixed(2)}</p>
 
-          <button onClick={() => navigate(`/appointment/${doc.doctor_id}`)}
-            className="mt-2 px-3 py-1 bg-green-500 text-white rounded">Book Now</button>
+                <button onClick={() => navigate(`/appointment/${doc.doctor_id}`)}
+                  className="mt-2 px-3 py-1 bg-green-500 text-white rounded">Book Now</button>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-)}
+      )}
 
       {/* Doctor List */}
       <div className='flex flex-col sm:flex-row items-start gap-5 mt-5'>
