@@ -3,6 +3,7 @@ import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognitio
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
+import Fuse from "fuse.js"; // fuzzy matching
 
 const VoiceAssistant = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const VoiceAssistant = () => {
 
   const [userInsurances, setUserInsurances] = useState([]);
   const [selectedInsuranceId, setSelectedInsuranceId] = useState("");
+  const [allSpecialties, setAllSpecialties] = useState([]);
 
   const speak = (text) => {
     const synth = window.speechSynthesis;
@@ -32,6 +34,47 @@ const VoiceAssistant = () => {
       .replace(/[.,]/g, "")
       .replace(/\s+/g, " ")
       .trim();
+
+  // ✅ Specialty normalizer (don’t strip "doctor"/"physician")
+  const normalizeSpecialty = (speciality) =>
+    speciality
+      .toLowerCase()
+      .replace(/(dr\.?|a )/g, "") // only strip "dr." or "a "
+      .replace(/[.,]/g, "")
+      .trim();
+
+  // ✅ Fuzzy match helper
+  const fuzzyMatchSpecialty = (spoken) => {
+    if (!allSpecialties.length) return spoken;
+    const fuse = new Fuse(allSpecialties, { threshold: 0.4 });
+    const result = fuse.search(spoken.toLowerCase());
+    return result.length ? result[0].item : spoken.toLowerCase();
+  };
+
+  // Load specialties once
+  useEffect(() => {
+    axios
+      .get(`${backendUrl}/api/specialties`)
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setAllSpecialties(res.data.map((s) => s.toLowerCase()));
+        }
+      })
+      .catch(() => {
+        // fallback
+        setAllSpecialties([
+          "general physician",
+          "gynecologist",
+          "dermatologist",
+          "pediatrician",
+          "pediatricians",
+          "neurologist",
+          "gastroenterologist",
+          "cardiologist",
+          "pulmonologist",
+        ]);
+      });
+  }, [backendUrl]);
 
   // Step 3: Slot click handler → move to insurance step
   const handleSlotClick = (slot) => {
@@ -54,7 +97,7 @@ const VoiceAssistant = () => {
     }
   };
 
-  // Step 4: Confirm booking with/without insurance
+  // Step 4: Confirm booking
   const confirmBooking = async () => {
     if (!userData || !userData._id) {
       if (loadUserProfileData) await loadUserProfileData();
@@ -68,8 +111,8 @@ const VoiceAssistant = () => {
 
     try {
       const parts = selectedSlot.split(" ");
-      const datePart = parts[0]; // "15_09_2025"
-      const timePart = `${parts[1]} ${parts[2]}`; // "10:00 AM"
+      const datePart = parts[0];
+      const timePart = `${parts[1]} ${parts[2]}`;
 
       const payload = {
         userId: userData._id,
@@ -88,7 +131,7 @@ const VoiceAssistant = () => {
       setResponse(data.message || "Appointment booked!");
       speak(data.message || "Appointment booked!");
 
-      // Reset assistant
+      // Reset
       setStep(1);
       setPendingDoctors([]);
       setChosenDoctor(null);
@@ -103,30 +146,62 @@ const VoiceAssistant = () => {
     }
   };
 
+  // ✅ Specialty routes (lowercase keys)
+  const specialtyRoutes = {
+    "general physician": "/doctors/General%20physician",
+    "gynecologist": "/doctors/gynecologist",
+    "dermatologist": "/doctors/dermatologist",
+    "pediatrician": "/doctors/pediatricians",
+    "pediatricians": "/doctors/pediatricians",
+    "neurologist": "/doctors/neurologist",
+    "gastroenterologist": "/doctors/gastroenterologist",
+    "cardiologist": "/doctors/cardiologist",
+    "pulmonologist": "/doctors/pulmonologist",
+  };
+
   // ================== COMMANDS ==================
   const commands = [
+    // ✅ Navigation
     {
-      command: ["go to *", "open *"],
+      command: ["go to *", "open *", "show me *"],
       callback: (page) => {
-        const formatted = page.toLowerCase();
-        if (formatted.includes("profile")) navigate("/my-profile");
+        const formatted = normalizeSpecialty(page);
+
+        if (specialtyRoutes[formatted]) {
+          navigate(specialtyRoutes[formatted]);
+          const msg = `Navigating to ${formatted} page.`;
+          setResponse(msg);
+          speak(msg);
+        } else if (formatted === "doctors" || formatted === "doctor") {
+          navigate("/doctors");
+          const msg = "Navigating to all doctors page.";
+          setResponse(msg);
+          speak(msg);
+        } else if (formatted.includes("profile")) navigate("/my-profile");
         else if (formatted.includes("appointments")) navigate("/my-appointments");
         else if (formatted.includes("contact")) navigate("/contact");
         else if (formatted.includes("about")) navigate("/about");
+        else if (formatted.includes("symptom checker")) navigate("/symptom-checker");
+        else if (formatted.includes("insurance")) navigate("/insurance");
         else if (formatted.includes("home")) navigate("/");
-        else if (formatted.includes("doctors")) navigate("/doctors");
         else if (formatted.includes("logout")) navigate("/login");
-        else setResponse(`Sorry, I don't recognize "${page}"`);
+        else {
+          const msg = `Sorry, I don't recognize "${page}"`;
+          setResponse(msg);
+          speak(msg);
+        }
       },
     },
 
-    // Step 1: Choose specialty
+    // Step 1: Choose specialty → fetch doctors
     {
       command: ["book appointment with a *", "find * doctor", "show me * doctors"],
       callback: async (speciality) => {
         try {
+          const specialityNormalized = fuzzyMatchSpecialty(normalizeSpecialty(speciality));
+
           const { data } = await axios.get(
-            `${backendUrl}/api/voice/doctors?speciality=${speciality}`,
+            `${backendUrl}/api/voice/doctors?speciality=${specialityNormalized}`,
             { headers: { token } }
           );
 
@@ -134,15 +209,16 @@ const VoiceAssistant = () => {
             setPendingDoctors(data.doctors);
             setStep(2);
 
-            // ✅ Include ratings + reviewsCount in the list
             const doctorNames = data.doctors
               .map(
                 (d) =>
-                  `Dr. ${d.name} (${d.rating ? d.rating.toFixed(1) : "No rating"}★ from ${d.reviewsCount || 0} reviews)`
+                  `Dr. ${d.name} (${d.rating ? d.rating.toFixed(1) : "No rating"}★ from ${
+                    d.reviewsCount || 0
+                  } reviews)`
               )
               .join(", ");
 
-            const message = `I found ${data.doctors.length} ${speciality} doctors: ${doctorNames}. Please choose a doctor.`;
+            const message = `I found ${data.doctors.length} ${specialityNormalized} doctors: ${doctorNames}. Please choose a doctor.`;
             setResponse(message);
             speak(message);
           } else {
@@ -192,9 +268,15 @@ const VoiceAssistant = () => {
             if (data.success && data.available.length) {
               setAvailableSlots(data.available);
 
-              const message = `You chose Dr. ${doctor.name} (${doctor.rating ? doctor.rating.toFixed(1) : "No rating"}★ from ${doctor.reviewsCount || 0} reviews). I found ${data.available.length} available slots. Please select one from the buttons below.`;
+              const message = `You chose Dr. ${doctor.name} (${
+                doctor.rating ? doctor.rating.toFixed(1) : "No rating"
+              }★ from ${doctor.reviewsCount || 0} reviews). I found ${
+                data.available.length
+              } available slots. Please select one from the buttons below.`;
               setResponse(message);
-              speak(`You chose Dr. ${doctor.name}. I found ${data.available.length} available slots. Please select one.`);
+              speak(
+                `You chose Dr. ${doctor.name}. I found ${data.available.length} available slots. Please select one.`
+              );
             } else {
               const message = `You chose Dr. ${doctor.name}, but no slots are available.`;
               setResponse(message);
@@ -215,8 +297,15 @@ const VoiceAssistant = () => {
       },
     },
 
+    // Friendly commands
     { command: ["hello", "hi"], callback: () => speak("Hello! How can I assist you today?") },
-    { command: ["goodbye", "bye"], callback: () => { speak("Goodbye!"); setIsListening(false); } },
+    {
+      command: ["goodbye", "bye"],
+      callback: () => {
+        speak("Goodbye!");
+        setIsListening(false);
+      },
+    },
   ];
 
   const { transcript, listening, browserSupportsSpeechRecognition } =
@@ -258,34 +347,46 @@ const VoiceAssistant = () => {
   }
 
   return (
-    <div style={{
-      position: "fixed",
-      bottom: "20px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      backgroundColor: "#fff",
-      padding: "16px",
-      borderRadius: "12px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-      fontSize: "14px",
-      width: "420px",
-      zIndex: 1000
-    }}>
+    <div
+      style={{
+        position: "fixed",
+        bottom: "20px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        backgroundColor: "#fff",
+        padding: "16px",
+        borderRadius: "12px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        fontSize: "14px",
+        width: "420px",
+        zIndex: 1000,
+      }}
+    >
       <strong className="text-lg">Voice Assistant</strong>
       <p>{listening ? "🎤 Listening..." : 'Say: "book appointment with a pediatrician"'}</p>
-      {transcript && <p><strong>You said:</strong> {transcript}</p>}
-      {response && <p><strong>Response:</strong> {response}</p>}
+      {transcript && (
+        <p>
+          <strong>You said:</strong> {transcript}
+        </p>
+      )}
+      {response && (
+        <p>
+          <strong>Response:</strong> {response}
+        </p>
+      )}
 
       {/* Step 3: Slots */}
       {step === 3 && chosenDoctor && availableSlots.length > 0 && (
         <div style={{ marginTop: "10px" }}>
           <strong>Select a slot for Dr. {chosenDoctor.name}:</strong>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5, 1fr)",
-            gap: "8px",
-            marginTop: "10px",
-          }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
             {availableSlots.map((slot) => {
               const [rawDate, time1, time2] = slot.split(" ");
               const date = rawDate.replace(/_/g, "/");
@@ -303,11 +404,17 @@ const VoiceAssistant = () => {
                     transition: "all 0.2s",
                     textAlign: "center",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#e6f7e6")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f9fff9")}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#e6f7e6")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f9fff9")
+                  }
                 >
                   <div style={{ fontWeight: "600", marginBottom: "4px" }}>{date}</div>
-                  <div>{time1} {time2}</div>
+                  <div>
+                    {time1} {time2}
+                  </div>
                 </button>
               );
             })}
