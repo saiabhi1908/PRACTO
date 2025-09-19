@@ -205,7 +205,7 @@ const Doctors = () => {
 
         <div className='grid w-full gap-4 grid-cols-auto gap-y-6'>
           {filterDoc.length > 0 ? filterDoc.map(doc => (
-            <div key={doc._id} className='border border-[#C9D8FF] rounded-xl overflow-hidden cursor-pointer max-w-60 max-h-96 hover:translate-y-[-10px] transition-all duration-500'>
+            <div key={doc._id} className='border border-[#C9D8FF] rounded-xl overflow-hidden cursor-pointer max-w-60 hover:translate-y-[-10px] transition-all duration-500'>
               <img className='bg-[#EAEFFF] w-full max-h-56 min-h-56 object-cover' src={doc.image} alt={doc.name || "Doctor"} />
               <div className='p-4'>
                 <div className={`flex items-center gap-2 text-sm text-center ${doc.available ? 'text-green-500' : 'text-gray-500'}`}>
@@ -222,11 +222,11 @@ const Doctors = () => {
                     Accepts Your Insurance
                   </span>
                 )}
-                <div className='flex justify-between gap-2 mt-3'>
+                <div className='flex flex-col justify-between gap-2 mt-3'>
                   <button onClick={() => { navigate(`/appointment/${doc._id}`); scrollTo(0, 0); }}
-                    className="px-3 py-1 text-sm bg-gray-200 rounded">Book Appointment</button>
+                    className="px-3 py-2 text-sm bg-gray-200 rounded">Book Appointment</button>
                   <button onClick={() => { const appointmentId = Date.now().toString(); navigate(`/video-call/${appointmentId}`); }}
-                    className="px-3 py-1 text-sm text-white bg-blue-500 rounded">Start Consultation</button>
+                    className="px-3 py-2 text-sm text-white bg-blue-500 rounded">Start Consultation</button>
                 </div>
               </div>
             </div>
