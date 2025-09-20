@@ -1,19 +1,21 @@
-import axios from 'axios'; // 🆕 Required to download original file
+import axios from 'axios';
 import medicalReportModel from "../models/medicalReportModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
 import sendEmail from "../utils/emailService.js";
 import { getReportHTML } from "../utils/reportTemplate.js";
 import { generateReportPDF } from "../utils/generateReportPDF.js";
+import { validatePrescription } from "../utils/aiPrescriptionValidator.js";
+import { extractTextFromImage } from "../utils/ocrService.js"; // 🆕 OCR
 
-// ✅ Upload Medical Report with chart images and double attachment email
+// ✅ Upload Medical Report with AI validation (only for prescriptions)
 export const uploadMedicalReport = async (req, res) => {
   try {
-    const { userId, chartData, chartImages } = req.body;
+    const { userId, chartData, chartImages, type } = req.body;
     const file = req.file;
 
-    if (!file || !userId) {
-      return res.status(400).json({ success: false, message: "Missing file or userId" });
+    if (!file || !userId || !type) {
+      return res.status(400).json({ success: false, message: "Missing file, userId, or type" });
     }
 
     // ✅ Upload to Cloudinary
@@ -26,17 +28,35 @@ export const uploadMedicalReport = async (req, res) => {
       unique_filename: false
     });
 
-    // ✅ Parse chart data
+    // ✅ Parse chart data/images
     const parsedChartData = chartData ? JSON.parse(chartData) : {};
     const parsedChartImages = chartImages ? JSON.parse(chartImages) : {};
 
-    // ✅ Save to DB
+    // ✅ Create base report object
     const report = new medicalReportModel({
       userId,
       reportName: file.originalname,
       fileUrl: result.secure_url,
-      chartData: parsedChartData
+      chartData: parsedChartData,
+      type
     });
+
+    // ✅ Run AI validation only for prescriptions
+    if (type === "prescription") {
+      // Extract text from uploaded file using OCR
+      const extractedText = await extractTextFromImage(file.path);
+
+      // Fetch user details for context (age/history)
+      const user = await userModel.findById(userId);
+
+      // Run AI validation
+      const validationResult = await validatePrescription(extractedText, {
+        age: user?.age,
+        history: user?.medicalHistory
+      });
+
+      report.aiValidation = validationResult;
+    }
 
     await report.save();
 
@@ -54,7 +74,7 @@ export const uploadMedicalReport = async (req, res) => {
       const response = await axios.get(result.secure_url, { responseType: 'arraybuffer' });
       const originalFileBuffer = response.data;
 
-      // Send email with 2 attachments
+      // Send email with 2 attachments (PDF + original file)
       await sendEmail(
         user.email,
         subject,
