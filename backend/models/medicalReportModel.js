@@ -6,7 +6,20 @@ const medicalReportSchema = new mongoose.Schema({
   fileUrl: { type: String, required: true },
   uploadedAt: { type: Date, default: Date.now },
 
-  // 🆕 Structured chart data
+  // ✅ Differentiate prescriptions vs. test reports
+  type: { type: String, enum: ["prescription", "test"], required: true },
+
+  // ✅ AI validation results (only meaningful for prescriptions)
+  aiValidation: {
+    status: {
+      type: String,
+      enum: ["pending", "safe", "warning", "danger"],
+      default: "pending"
+    },
+    issues: [{ type: String }]
+  },
+
+  // ✅ Structured chart data (only meaningful for test reports)
   chartData: {
     bloodPressure: [
       {
@@ -21,7 +34,7 @@ const medicalReportSchema = new mongoose.Schema({
         value: { type: Number, required: true }
       }
     ],
-    thyroidLevels: [ // 🆕 Add this block
+    thyroidLevels: [
       {
         date: { type: String, required: true },
         tsh: { type: Number, required: true },

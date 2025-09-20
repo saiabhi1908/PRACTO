@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 const UploadReport = () => {
   const [reportFile, setReportFile] = useState(null);
   const [userId, setUserId] = useState('');
+  const [type, setType] = useState('prescription'); // ✅ default type
 
   const [bloodPressure, setBloodPressure] = useState([{ date: '', systolic: '', diastolic: '' }]);
   const [glucoseLevels, setGlucoseLevels] = useState([{ date: '', value: '' }]);
@@ -27,17 +28,9 @@ const UploadReport = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!userId.trim()) {
-      toast.error('Please enter a User ID.');
-      return;
-    }
+    if (!userId.trim()) return toast.error('Please enter a User ID.');
+    if (!reportFile) return toast.error('Please upload a medical report file.');
 
-    if (!reportFile) {
-      toast.error('Please upload a medical report file.');
-      return;
-    }
-
-    // ✅ Filter only filled chart data
     const chartData = {
       bloodPressure: bloodPressure.filter(row => row.date && row.systolic && row.diastolic),
       glucoseLevels: glucoseLevels.filter(row => row.date && row.value),
@@ -45,24 +38,16 @@ const UploadReport = () => {
       thyroidLevels: thyroidLevels.filter(row => row.date && row.tsh),
     };
 
-    // ✅ Capture charts conditionally only if they have data
     const chartImages = {};
-    if (chartData.bloodPressure.length > 0) {
-      chartImages.bpImage = await captureChart("bp-chart");
-    }
-    if (chartData.glucoseLevels.length > 0) {
-      chartImages.glucoseImage = await captureChart("glucose-chart");
-    }
-    if (chartData.heartRate.length > 0) {
-      chartImages.heartImage = await captureChart("heart-chart");
-    }
-    if (chartData.thyroidLevels.length > 0) {
-      chartImages.thyroidImage = await captureChart("thyroid-chart");
-    }
+    if (chartData.bloodPressure.length > 0) chartImages.bpImage = await captureChart("bp-chart");
+    if (chartData.glucoseLevels.length > 0) chartImages.glucoseImage = await captureChart("glucose-chart");
+    if (chartData.heartRate.length > 0) chartImages.heartImage = await captureChart("heart-chart");
+    if (chartData.thyroidLevels.length > 0) chartImages.thyroidImage = await captureChart("thyroid-chart");
 
     const formData = new FormData();
     formData.append('report', reportFile);
     formData.append('userId', userId.trim());
+    formData.append('type', type); // ✅ crucial fix
     formData.append('chartData', JSON.stringify(chartData));
     formData.append('chartImages', JSON.stringify(chartImages));
 
@@ -118,9 +103,7 @@ const UploadReport = () => {
       ))}
       <button
         type="button"
-        onClick={() =>
-          setData([...data, fields.reduce((obj, f) => ({ ...obj, [f.key]: '' }), {})])
-        }
+        onClick={() => setData([...data, fields.reduce((obj, f) => ({ ...obj, [f.key]: '' }), {})])}
         className="text-sm text-blue-600 hover:underline"
       >
         ➕ Add Row
@@ -140,6 +123,15 @@ const UploadReport = () => {
           className="border rounded px-3 py-2"
           required
         />
+
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="border rounded px-3 py-2"
+        >
+          <option value="prescription">Prescription</option>
+          <option value="test">Test</option>
+        </select>
 
         <input
           type="file"
