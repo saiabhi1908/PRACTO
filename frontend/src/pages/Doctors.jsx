@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import { AppContext } from '../context/AppContext';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
 
 // Backend URLs
 const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || 'http://localhost:4000';
@@ -116,7 +116,7 @@ const Doctors = () => {
       {Array.from({ length: 5 }).map((_, i) => (
         <span key={i} className={`text-sm ${i < Math.floor(rating || 0) ? "text-yellow-400" : "text-gray-300"}`}>★</span>
       ))}
-      <span className="text-xs text-gray-600 ml-1">
+      <span className="ml-1 text-xs text-gray-600">
         {rating ? rating.toFixed(1) : "No rating"} {reviewsCount ? `(${reviewsCount} review${reviewsCount > 1 ? 's' : ''})` : ''}
       </span>
     </div>
@@ -125,10 +125,10 @@ const Doctors = () => {
   return (
     <div>
       {/* Filters and AI Search */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center justify-between mb-4">
         <p className='text-gray-600'>Browse through the doctors specialist.</p>
         <select
-          className="border p-2 rounded"
+          className="p-2 border rounded"
           value={filterInsurance}
           onChange={(e) => setFilterInsurance(e.target.value)}
         >
@@ -147,12 +147,12 @@ const Doctors = () => {
 
       <div className="mb-4">
         <textarea
-          className="border p-2 w-full"
+          className="w-full p-2 border"
           placeholder="Describe your symptoms or needs..."
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
-        <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={findMatches}>
+        <button className="px-4 py-2 mt-2 text-white bg-blue-600 rounded" onClick={findMatches}>
           Find Best Matches (AI)
         </button>
       </div>
@@ -160,10 +160,10 @@ const Doctors = () => {
 {/* AI Suggested Doctors */}
 {aiMatches.length > 0 && (
   <div className="mt-4">
-    <h3 className="text-xl font-semibold mb-2">AI Suggested Doctors</h3>
-    <div className="grid grid-cols-auto gap-4">
+    <h3 className="mb-2 text-xl font-semibold">AI Suggested Doctors</h3>
+    <div className="grid gap-4 grid-cols-auto">
       {aiMatches.map(doc => (
-        <div key={doc.doctor_id} className="border p-4 rounded">
+        <div key={doc.doctor_id} className="p-4 border rounded">
           <p className="font-bold">{doc.name}</p>
 
           {/* ✅ Show speciality */}
@@ -174,10 +174,10 @@ const Doctors = () => {
           <p>Languages: {doc.languagesKnown?.join(", ") || 'N/A'}</p>
           <p>Insurance: {doc.acceptedInsurances?.join(", ") || 'N/A'}</p>
           {renderStars(doc.rating, doc.reviewsCount)}
-          <p className="text-xs text-gray-500 mt-1">AI Score: {doc.aiScore?.toFixed(2)}</p>
+          <p className="mt-1 text-xs text-gray-500">AI Score: {doc.aiScore?.toFixed(2)}</p>
 
           <button onClick={() => navigate(`/appointment/${doc.doctor_id}`)}
-            className="mt-2 px-3 py-1 bg-green-500 text-white rounded">Book Now</button>
+            className="px-3 py-1 mt-2 text-white bg-green-500 rounded">Book Now</button>
         </div>
       ))}
     </div>
@@ -185,7 +185,7 @@ const Doctors = () => {
 )}
 
       {/* Doctor List */}
-      <div className='flex flex-col sm:flex-row items-start gap-5 mt-5'>
+      <div className='flex flex-col items-start gap-5 mt-5 sm:flex-row'>
         <button
           onClick={() => setShowFilter(!showFilter)}
           className={`py-1 px-3 border rounded text-sm transition-all sm:hidden ${showFilter ? 'bg-primary text-white' : ''}`}>
@@ -203,10 +203,10 @@ const Doctors = () => {
           ))}
         </div>
 
-        <div className='w-full grid grid-cols-auto gap-4 gap-y-6'>
+        <div className='grid w-full gap-4 grid-cols-auto gap-y-6'>
           {filterDoc.length > 0 ? filterDoc.map(doc => (
-            <div key={doc._id} className='border border-[#C9D8FF] rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500'>
-              <img className='bg-[#EAEFFF]' src={doc.image} alt={doc.name || "Doctor"} />
+            <div key={doc._id} className='border border-[#C9D8FF] rounded-xl overflow-hidden cursor-pointer max-w-60 hover:translate-y-[-10px] transition-all duration-500'>
+              <img className='bg-[#EAEFFF] w-full max-h-56 min-h-56 object-cover' src={doc.image} alt={doc.name || "Doctor"} />
               <div className='p-4'>
                 <div className={`flex items-center gap-2 text-sm text-center ${doc.available ? 'text-green-500' : 'text-gray-500'}`}>
                   <p className={`w-2 h-2 rounded-full ${doc.available ? 'bg-green-500' : 'bg-gray-500'}`}></p>
@@ -218,15 +218,15 @@ const Doctors = () => {
                 </p>
                 {renderStars(doc.rating, doc.reviewsCount)}
                 {userInsurance && doc.acceptedInsurances?.some(i => i.toLowerCase() === userInsurance.toLowerCase()) && (
-                  <span className="text-green-600 text-xs font-medium bg-green-100 px-2 py-1 rounded-full inline-block mt-1">
+                  <span className="inline-block px-2 py-1 mt-1 text-xs font-medium text-green-600 bg-green-100 rounded-full">
                     Accepts Your Insurance
                   </span>
                 )}
-                <div className='mt-3 flex justify-between gap-2'>
+                <div className='flex flex-col justify-between gap-2 mt-3'>
                   <button onClick={() => { navigate(`/appointment/${doc._id}`); scrollTo(0, 0); }}
-                    className="px-3 py-1 bg-gray-200 rounded text-sm">Book Appointment</button>
+                    className="px-3 py-2 text-sm bg-gray-200 rounded">Book Appointment</button>
                   <button onClick={() => { const appointmentId = Date.now().toString(); navigate(`/video-call/${appointmentId}`); }}
-                    className="px-3 py-1 bg-blue-500 text-white rounded text-sm">Start Consultation</button>
+                    className="px-3 py-2 text-sm text-white bg-blue-500 rounded">Start Consultation</button>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,35 +8,34 @@ import { HMSRoomProvider } from '@100mslive/react-sdk';
 import MyAppointmentChat from './pages/MyAppointmentChat';
 
 import { Elements } from '@stripe/react-stripe-js';
-import SymptomChecker from "./pages/SymptomChecker";
 import { loadStripe } from '@stripe/stripe-js';
 import MedicalReports from './pages/MedicalReports';
+import SymptomChecker from "./pages/SymptomChecker";
 
 
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import VoiceAssistant from './components/VoiceAssistant';
 import AIChatBot from './components/AIChatBot';
+import Footer from './components/Footer';
+import Navbar from './components/Navbar';
 import NearbyHospitals from './components/NearbyHospitals';
-import LanguageRecommendation from './components/LanguageRecommendation';
-import Insurance from './pages/Insurance';
-import Setup2FA from './pages/Setup2FA';
-import Verify2FA from './pages/Verify2FA';
-import VideoCall from './pages/VideoCall';
-import Home from './pages/Home';
-import Doctors from './pages/Doctors';
-import Login from './pages/Login';
+import VoiceAssistant from './components/VoiceAssistant';
 import About from './pages/About';
-import Contact from './pages/Contact';
+import AdminPanel from './pages/AdminPanel';
 import Appointment from './pages/Appointment';
+import Contact from './pages/Contact';
+import Doctors from './pages/Doctors';
+import ForgotPassword from './pages/ForgotPassword';
+import Home from './pages/Home';
+import Insurance from './pages/Insurance';
+import Login from './pages/Login';
 import MyAppointments from './pages/MyAppointments';
 import MyProfile from './pages/MyProfile';
-import Verify from './pages/Verify';
-import AdminPanel from './pages/AdminPanel';
-import ForgotPassword from './pages/ForgotPassword';
-import VerifyOtp from './pages/VerifyOtp';
-import ResetPassword from './pages/ResetPassword';
 import PaymentPage from './pages/PaymentPage'; // ✅ Ensure this is imported
+import ResetPassword from './pages/ResetPassword';
+import Setup2FA from './pages/Setup2FA';
+import Verify from './pages/Verify';
+import Verify2FA from './pages/Verify2FA';
+import VerifyOtp from './pages/VerifyOtp';
+import VideoCall from './pages/VideoCall';
 
 // ✅ Stripe public key from .env
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -71,7 +70,6 @@ const App = () => {
         <VoiceAssistant />
         <AIChatBot />
 
-        {currentLocation.pathname === '/' && <LanguageRecommendation />}
         {currentLocation.pathname === '/' && location.lat && location.lng && (
           <NearbyHospitals lat={location.lat} lng={location.lng} />
         )}
