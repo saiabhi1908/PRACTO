@@ -39,6 +39,7 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 - Test reports (BP, sugar, thyroid, etc.) must be entered by doctors/admin
 - Users can view these values in their login, with graphs and advanced visualizations
 - Automatic email notifications with reports attached
+- ****AI Prescription Validator****: After prescriptions are uploaded, AI parses them based on age, weight, and dosage, providing a safety validation (safe/unsafe)
 
 ### 🔹 AI Features
 - AI Chatbot: Answers all patient and doctor queries intelligently
