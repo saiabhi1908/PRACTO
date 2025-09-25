@@ -133,7 +133,7 @@ const AIChatBot = () => {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "mistralai/mistral-7b-instruct", // ✅ Multilingual model
+          model: "mistralai/mixtral-8x7b-instruct", // ✅ Multilingual model
           messages: [
             {
               role: "system",

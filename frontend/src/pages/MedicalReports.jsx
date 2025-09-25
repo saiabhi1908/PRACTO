@@ -105,6 +105,30 @@ const MedicalReports = () => {
                   </a>
                 </div>
 
+                {/* ✅ Show AI Validation only for prescriptions */}
+                {report.type === "prescription" && report.aiValidation && (
+                  <div
+                    className={`mt-2 p-2 rounded ${
+                      report.aiValidation.status === 'safe'
+                        ? 'bg-green-100 text-green-700'
+                        : report.aiValidation.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    <p>
+                      <strong>AI Validation:</strong> {report.aiValidation.status}
+                    </p>
+                    {report.aiValidation.issues?.length > 0 && (
+                      <ul className="list-disc ml-4">
+                        {report.aiValidation.issues.map((issue, i) => (
+                          <li key={i}>{issue}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
                 {/* 🩸 Blood Pressure */}
                 {report.chartData?.bloodPressure?.length > 0 && (
                   <>
@@ -122,7 +146,11 @@ const MedicalReports = () => {
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
-                    {renderTable(["Date", "Systolic", "Diastolic"], report.chartData.bloodPressure, ["date", "systolic", "diastolic"])}
+                    {renderTable(
+                      ["Date", "Systolic", "Diastolic"],
+                      report.chartData.bloodPressure,
+                      ["date", "systolic", "diastolic"]
+                    )}
                   </>
                 )}
 
@@ -142,7 +170,11 @@ const MedicalReports = () => {
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
-                    {renderTable(["Date", "Glucose (mg/dL)"], report.chartData.glucoseLevels, ["date", "value"])}
+                    {renderTable(
+                      ["Date", "Glucose (mg/dL)"],
+                      report.chartData.glucoseLevels,
+                      ["date", "value"]
+                    )}
                   </>
                 )}
 
@@ -162,7 +194,11 @@ const MedicalReports = () => {
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
-                    {renderTable(["Date", "BPM"], report.chartData.heartRate, ["date", "bpm"])}
+                    {renderTable(
+                      ["Date", "BPM"],
+                      report.chartData.heartRate,
+                      ["date", "bpm"]
+                    )}
                   </>
                 )}
 
@@ -182,7 +218,11 @@ const MedicalReports = () => {
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
-                    {renderTable(["Date", "TSH (mIU/L)"], report.chartData.thyroidLevels, ["date", "tsh"])}
+                    {renderTable(
+                      ["Date", "TSH (mIU/L)"],
+                      report.chartData.thyroidLevels,
+                      ["date", "tsh"]
+                    )}
                   </>
                 )}
               </div>

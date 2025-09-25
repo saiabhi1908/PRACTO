@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import LoadingOverlay from './components/LoadingOverlay';
+import { LoadingProvider } from './context/LoadingContext';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -32,6 +34,7 @@ import MyProfile from './pages/MyProfile';
 import PaymentPage from './pages/PaymentPage'; // ✅ Ensure this is imported
 import ResetPassword from './pages/ResetPassword';
 import Setup2FA from './pages/Setup2FA';
+import Signup from './pages/Signup';
 import Verify from './pages/Verify';
 import Verify2FA from './pages/Verify2FA';
 import VerifyOtp from './pages/VerifyOtp';
@@ -63,53 +66,57 @@ const App = () => {
   }, []);
 
   return (
-    <Elements stripe={stripePromise}>
-      <div className='mx-4 sm:mx-[10%]'>
-        <ToastContainer />
-        <Navbar />
-        <VoiceAssistant />
-        <AIChatBot />
+    <LoadingProvider>
+      <Elements stripe={stripePromise}>
+        <div className='mx-4 sm:mx-[10%]'>
+          <LoadingOverlay />
+          <ToastContainer />
+          <Navbar />
+          <VoiceAssistant />
+          <AIChatBot />
 
-        {currentLocation.pathname === '/' && location.lat && location.lng && (
-          <NearbyHospitals lat={location.lat} lng={location.lng} />
-        )}
+          {currentLocation.pathname === '/' && location.lat && location.lng && (
+            <NearbyHospitals lat={location.lat} lng={location.lng} />
+          )}
 
-        <Routes>
-          <Route path='/' element={<Home />} />
-          <Route path='/doctors' element={<Doctors />} />
-          <Route path='/doctors/:speciality' element={<Doctors />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/about' element={<About />} />
-          <Route path='/contact' element={<Contact />} />
-          <Route path='/appointment/:docId' element={<Appointment />} />
-          <Route path='/my-appointments' element={<MyAppointments />} />
-          <Route path="/symptom-checker" element={<SymptomChecker userId={"logged-in-user-id"} />} />
-          <Route path='/my-profile' element={<MyProfile />} />
-          <Route path='/my-reports' element={<MedicalReports />} />
-           <Route path="/my-appointments/:id/chat" element={<MyAppointmentChat />} />
+          <Routes>
+            <Route path='/' element={<Home />} />
+            <Route path='/doctors' element={<Doctors />} />
+            <Route path='/doctors/:speciality' element={<Doctors />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/signup' element={<Signup />} />
+            <Route path='/about' element={<About />} />
+            <Route path='/contact' element={<Contact />} />
+            <Route path='/appointment/:docId' element={<Appointment />} />
+            <Route path='/my-appointments' element={<MyAppointments />} />
+            <Route path="/symptom-checker" element={<SymptomChecker userId={"logged-in-user-id"} />} />
+            <Route path='/my-profile' element={<MyProfile />} />
+            <Route path='/my-reports' element={<MedicalReports />} />
+             <Route path="/my-appointments/:id/chat" element={<MyAppointmentChat />} />
 
-          <Route path='/verify' element={<Verify />} />
-          <Route path='/admin' element={<AdminPanel />} />
-          <Route path='/setup-2fa' element={<Setup2FA />} />
-          <Route path='/verify-2fa' element={<Verify2FA />} />
-          <Route path="/insurance" element={<Insurance />} />
-          <Route path='/payment-page' element={<PaymentPage />} /> {/* ✅ Add this route */}
-          <Route
-            path='/video-call'
-            element={
-              <HMSRoomProvider>
-                <VideoCall />
-              </HMSRoomProvider>
-            }
-          />
-          <Route path='/forgot-password' element={<ForgotPassword />} />
-          <Route path='/verify-otp' element={<VerifyOtp />} />
-          <Route path='/reset-password' element={<ResetPassword />} />
-        </Routes>
+            <Route path='/verify' element={<Verify />} />
+            <Route path='/admin' element={<AdminPanel />} />
+            <Route path='/setup-2fa' element={<Setup2FA />} />
+            <Route path='/verify-2fa' element={<Verify2FA />} />
+            <Route path="/insurance" element={<Insurance />} />
+            <Route path='/payment-page' element={<PaymentPage />} /> {/* ✅ Add this route */}
+            <Route
+              path='/video-call'
+              element={
+                <HMSRoomProvider>
+                  <VideoCall />
+                </HMSRoomProvider>
+              }
+            />
+            <Route path='/forgot-password' element={<ForgotPassword />} />
+            <Route path='/verify-otp' element={<VerifyOtp />} />
+            <Route path='/reset-password' element={<ResetPassword />} />
+          </Routes>
 
-        <Footer />
-      </div>
-    </Elements>
+          <Footer />
+        </div>
+      </Elements>
+    </LoadingProvider>
   );
 };
 
