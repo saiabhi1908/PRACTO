@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
 import axios from 'axios';
+import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AppContext } from "../context/AppContext";
@@ -48,19 +48,19 @@ const Verify2FA = () => {
   };
 
   return (
-    <div className="p-4 flex flex-col items-center">
-      <h2 className="text-xl font-semibold mb-4">Enter 6-digit code from Google Authenticator</h2>
+    <div className="flex flex-col items-center p-4">
+      <h2 className="mb-4 text-xl font-semibold">Enter 6-digit code from Google Authenticator</h2>
       <input
         type="text"
         value={code}
         maxLength={6}
         onChange={(e) => setCode(e.target.value)}
-        className="border rounded p-2 mb-4 text-center text-lg"
+        className="p-2 mb-4 text-lg text-center border rounded"
         placeholder="123456"
       />
       <button
         onClick={handleVerify}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
       >
         Verify
       </button>
