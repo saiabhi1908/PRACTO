@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { AppContext } from '../context/AppContext';
-import { toast } from 'react-toastify';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { AppContext } from '../context/AppContext';
 
 const Setup2FA = () => {
   const [qrCode, setQrCode] = useState('');
@@ -68,8 +68,8 @@ const Setup2FA = () => {
   }
 
   return (
-    <div className="p-4 flex flex-col items-center">
-      <h2 className="text-2xl font-bold mb-4">Enable Google 2FA</h2>
+    <div className="flex flex-col items-center p-4">
+      <h2 className="mb-4 text-2xl font-bold">Enable Google 2FA</h2>
       {qrCode && <img src={qrCode} alt="QR Code" className="mb-4" />}
       <p className="mb-2">Scan this QR code in Google Authenticator or Authy</p>
       <input
@@ -78,18 +78,18 @@ const Setup2FA = () => {
         value={token}
         maxLength={6}
         onChange={(e) => setToken(e.target.value)}
-        className="border rounded p-2 mb-4 text-center"
+        className="p-2 mb-4 text-center border rounded"
       />
       <button
         onClick={verify2FA}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
       >
         Verify
       </button>
 
       {/* Optional: display raw QR code string for debugging */}
       {qrCode && (
-        <pre className="max-w-xs break-words bg-gray-100 p-2 rounded mt-4">
+        <pre className="max-w-xs p-2 mt-4 break-words bg-gray-100 rounded">
           {qrCode}
         </pre>
       )}
