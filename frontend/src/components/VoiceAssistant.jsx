@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useContext } from "react";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { AppContext } from "../context/AppContext";
 import Fuse from "fuse.js"; // fuzzy matching
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import mic_icon from '../assets/mic.svg';
+import { AppContext } from "../context/AppContext";
+
 
 const VoiceAssistant = () => {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ const VoiceAssistant = () => {
   const [manualCommand, setManualCommand] = useState("");
   const [step, setStep] = useState(1); // 1: specialty, 2: doctor, 3: slot, 4: insurance
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [isOpen, setIsOpen] = useState(true);
 
   const [userInsurances, setUserInsurances] = useState([]);
   const [selectedInsuranceId, setSelectedInsuranceId] = useState("");
@@ -342,160 +345,181 @@ const VoiceAssistant = () => {
     setManualCommand("");
   };
 
+  const handleOpenClose = () => {
+    setIsOpen(!isOpen);
+  }
+
   if (!browserSupportsSpeechRecognition) {
     return <span>Your browser does not support speech recognition.</span>;
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: "20px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        backgroundColor: "#fff",
-        padding: "16px",
-        borderRadius: "12px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        fontSize: "14px",
-        width: "420px",
-        zIndex: 1000,
-      }}
-    >
-      <strong className="text-lg">Voice Assistant</strong>
-      <p>{listening ? "🎤 Listening..." : 'Say: "book appointment with a pediatrician"'}</p>
-      {transcript && (
-        <p>
-          <strong>You said:</strong> {transcript}
-        </p>
-      )}
-      {response && (
-        <p>
-          <strong>Response:</strong> {response}
-        </p>
-      )}
-
-      {/* Step 3: Slots */}
-      {step === 3 && chosenDoctor && availableSlots.length > 0 && (
-        <div style={{ marginTop: "10px" }}>
-          <strong>Select a slot for Dr. {chosenDoctor.name}:</strong>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(5, 1fr)",
-              gap: "8px",
-              marginTop: "10px",
-            }}
-          >
-            {availableSlots.map((slot) => {
-              const [rawDate, time1, time2] = slot.split(" ");
-              const date = rawDate.replace(/_/g, "/");
-              return (
-                <button
-                  key={slot}
-                  onClick={() => handleSlotClick(slot)}
-                  style={{
-                    padding: "8px",
-                    borderRadius: "8px",
-                    border: "1px solid #4CAF50",
-                    backgroundColor: "#f9fff9",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    transition: "all 0.2s",
-                    textAlign: "center",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#e6f7e6")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#f9fff9")
-                  }
-                >
-                  <div style={{ fontWeight: "600", marginBottom: "4px" }}>{date}</div>
-                  <div>
-                    {time1} {time2}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Insurance selection */}
-      {step === 4 && selectedSlot && (
-        <div style={{ marginTop: "10px" }}>
-          <strong>Insurance:</strong>
-          <select
-            value={selectedInsuranceId}
-            onChange={(e) => setSelectedInsuranceId(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: "6px",
-              padding: "8px",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-            }}
-          >
-            <option value="">No insurance</option>
-            {userInsurances.map((ins) => (
-              <option key={ins._id} value={ins._id}>
-                {ins.provider} ({ins.coverageDetails})
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={confirmBooking}
-            style={{
-              marginTop: "10px",
-              width: "100%",
-              padding: "10px",
-              backgroundColor: "#4CAF50",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            Confirm Appointment
-          </button>
-        </div>
-      )}
-
-      <button
-        onClick={() => setIsListening((prev) => !prev)}
+    <section>
+      <div
         style={{
-          marginTop: "10px",
-          padding: "8px 12px",
-          backgroundColor: isListening ? "#e53935" : "#4CAF50",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontSize: "13px",
-          width: "100%",
+          position: "fixed",
+          bottom: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          backgroundColor: "#fff",
+          padding: "16px",
+          borderRadius: "12px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          fontSize: "14px",
+          width: "420px",
+          zIndex: 1000,
         }}
+        className="voice-assistant-container"
+        hidden={isOpen}
       >
-        {isListening ? "Stop Listening" : "Start Listening"}
-      </button>
-
-      <form onSubmit={handleManualSubmit} style={{ marginTop: "10px" }}>
-        <input
-          type="text"
-          placeholder='Type: "book an appointment with a pediatrician"'
-          value={manualCommand}
-          onChange={(e) => setManualCommand(e.target.value)}
+        <div className="flex items-center justify-between mb-2">
+          <strong className="text-lg">Voice Assistant</strong>
+          <button
+            style={{
+              color: "#5f6fff"
+            }}
+            onClick={handleOpenClose}
+            className="text-lg font-bold">x</button>
+        </div>
+        <p>{listening ? "🎤 Listening..." : 'Say: "book appointment with a pediatrician"'}</p>
+        {transcript && (
+          <p>
+            <strong>You said:</strong> {transcript}
+          </p>
+        )}
+        {response && (
+          <p>
+            <strong>Response:</strong> {response}
+          </p>
+        )}
+        {/* Step 3: Slots */}
+        {step === 3 && chosenDoctor && availableSlots.length > 0 && (
+          <div style={{ marginTop: "10px" }}>
+            <strong>Select a slot for Dr. {chosenDoctor.name}:</strong>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(5, 1fr)",
+                gap: "8px",
+                marginTop: "10px",
+              }}
+            >
+              {availableSlots.map((slot) => {
+                const [rawDate, time1, time2] = slot.split(" ");
+                const date = rawDate.replace(/_/g, "/");
+                return (
+                  <button
+                    key={slot}
+                    onClick={() => handleSlotClick(slot)}
+                    style={{
+                      padding: "8px",
+                      borderRadius: "8px",
+                      border: "1px solid #4CAF50",
+                      backgroundColor: "#f9fff9",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      transition: "all 0.2s",
+                      textAlign: "center",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#e6f7e6")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#f9fff9")
+                    }
+                  >
+                    <div style={{ fontWeight: "600", marginBottom: "4px" }}>{date}</div>
+                    <div>
+                      {time1} {time2}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {/* Step 4: Insurance selection */}
+        {step === 4 && selectedSlot && (
+          <div style={{ marginTop: "10px" }}>
+            <strong>Insurance:</strong>
+            <select
+              value={selectedInsuranceId}
+              onChange={(e) => setSelectedInsuranceId(e.target.value)}
+              style={{
+                width: "100%",
+                marginTop: "6px",
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+            >
+              <option value="">No insurance</option>
+              {userInsurances.map((ins) => (
+                <option key={ins._id} value={ins._id}>
+                  {ins.provider} ({ins.coverageDetails})
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={confirmBooking}
+              style={{
+                marginTop: "10px",
+                width: "100%",
+                padding: "10px",
+                backgroundColor: "#4CAF50",
+                color: "#fff",
+                border: "none",
+                borderRadius: "6px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              Confirm Appointment
+            </button>
+          </div>
+        )}
+        <button
+          onClick={() => setIsListening((prev) => !prev)}
           style={{
-            width: "100%",
-            padding: "8px",
-            border: "1px solid #ccc",
+            marginTop: "10px",
+            padding: "8px 12px",
+            backgroundColor: isListening ? "#e53935" : "#5f6fff",
+            color: "white",
+            border: "none",
             borderRadius: "6px",
+            cursor: "pointer",
             fontSize: "13px",
+            width: "100%",
           }}
-        />
-      </form>
-    </div>
+        >
+          {isListening ? "Stop Listening" : "Start Listening"}
+        </button>
+        <form onSubmit={handleManualSubmit} style={{ marginTop: "10px" }}>
+          <input
+            type="text"
+            placeholder='Type: "book an appointment with a pediatrician"'
+            value={manualCommand}
+            onChange={(e) => setManualCommand(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px",
+              border: "1px solid #ccc",
+              borderRadius: "6px",
+              fontSize: "13px",
+            }}
+          />
+        </form>
+      </div>
+      <div 
+        hidden={!isOpen}
+        onClick={handleOpenClose}
+        style={{backgroundColor: "#5f6fff", opacity: 0.9}}
+        className="fixed z-10 flex flex-col items-center justify-center gap-1 p-3 text-white transform -translate-x-1/2 rounded-full shadow-lg w-28 h-28 bottom-4 left-1/2 z-1000"
+      >
+        <img src={mic_icon} className="w-8 h-8" style={{filter: "invert(1)"}} alt="Description" />
+        <span className="text-sm">Voice Search</span>
+      </div>
+    </section>
   );
 };
 
