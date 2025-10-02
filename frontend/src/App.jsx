@@ -11,11 +11,11 @@ import MyAppointmentChat from './pages/MyAppointmentChat';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import LanguageRecommendation from './components/LanguageRecommendation';
 import MedicalReports from './pages/MedicalReports';
 import SymptomChecker from "./pages/SymptomChecker";
 
 
-import AIChatBot from './components/AIChatBot';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import NearbyHospitals from './components/NearbyHospitals';
@@ -72,8 +72,8 @@ const App = () => {
           <LoadingOverlay />
           <ToastContainer />
           <Navbar />
+          <LanguageRecommendation />
           <VoiceAssistant />
-          <AIChatBot />
 
           {currentLocation.pathname === '/' && location.lat && location.lng && (
             <NearbyHospitals lat={location.lat} lng={location.lng} />
