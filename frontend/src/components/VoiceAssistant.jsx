@@ -513,11 +513,10 @@ const VoiceAssistant = () => {
       <div 
         hidden={!isOpen}
         onClick={handleOpenClose}
-        style={{backgroundColor: "#5f6fff", opacity: 0.9}}
-        className="fixed z-10 flex flex-col items-center justify-center gap-1 p-3 text-white transform -translate-x-1/2 rounded-full shadow-lg w-28 h-28 bottom-4 left-1/2 z-1000"
+        style={{background: "radial-gradient(circle at 30% 30%, #c7d2fe, #6366f1)", width: "64px", height: "64px", bottom: "135px", right: "15px", cursor: "pointer"}}
+        className="fixed z-10 flex flex-col items-center justify-center gap-1 p-3 text-white transform -translate-x-1/2 rounded-full shadow-lg"
       >
         <img src={mic_icon} className="w-8 h-8" style={{filter: "invert(1)"}} alt="Description" />
-        <span className="text-sm">Voice Search</span>
       </div>
     </section>
   );
