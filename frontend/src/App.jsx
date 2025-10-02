@@ -11,6 +11,7 @@ import MyAppointmentChat from './pages/MyAppointmentChat';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import LanguageRecommendation from './components/LanguageRecommendation';
 import MedicalReports from './pages/MedicalReports';
 import SymptomChecker from "./pages/SymptomChecker";
 
@@ -71,6 +72,7 @@ const App = () => {
           <LoadingOverlay />
           <ToastContainer />
           <Navbar />
+          <LanguageRecommendation />
           <VoiceAssistant />
 
           {currentLocation.pathname === '/' && location.lat && location.lng && (
