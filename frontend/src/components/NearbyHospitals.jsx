@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useEffect, useState } from "react";
 
 const NearbyHospitals = ({ lat, lng }) => {
   const [places, setPlaces] = useState([]);
@@ -14,9 +14,10 @@ const NearbyHospitals = ({ lat, lng }) => {
   }, [lat, lng]);
 
   return (
-    <div style={styles.hospitalsContainer}>
-      <h2 style={styles.title}>Nearby Hospitals</h2>
-      <div style={styles.hospitalList}>
+    <div className="flex flex-col items-center justify-center gap-4" style={styles.hospitalsContainer}>
+      <h1 className='text-3xl font-medium'>Nearby Hospitals</h1>
+      <p className='text-sm text-center sm:w-1/3'>Quickly locate hospitals near you and access quality care with ease whenever you need it.</p>
+      <div style={places.length == 0 ? {height: "120px", marginTop: "20px", marginBlock: "64px"} : styles.hospitalList}>
         {places.length > 0 ? (
           places.map((place) => (
             <a
