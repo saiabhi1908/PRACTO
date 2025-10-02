@@ -15,7 +15,6 @@ import MedicalReports from './pages/MedicalReports';
 import SymptomChecker from "./pages/SymptomChecker";
 
 
-import AIChatBot from './components/AIChatBot';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import NearbyHospitals from './components/NearbyHospitals';
@@ -73,7 +72,6 @@ const App = () => {
           <ToastContainer />
           <Navbar />
           <VoiceAssistant />
-          <AIChatBot />
 
           {currentLocation.pathname === '/' && location.lat && location.lng && (
             <NearbyHospitals lat={location.lat} lng={location.lng} />
