@@ -8,10 +8,16 @@ const Footer = () => {
       <div className='flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10  mt-40 text-sm'>
 
         <div>
-          <img className='w-40 mb-5' src={assets.logo} alt="" />
-          <LanguageRecommendation />
+          <img className='w-40 mb-5' src={assets.practo} alt="" />
+          
 
-          <p className='w-full my-5 leading-6 text-gray-600 md:w-2/3'>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&#39;s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+<p className='w-full my-5 leading-6 text-gray-600 md:w-2/3'>
+  Practo is your trusted healthcare partner, making it easy to book 
+  appointments with certified doctors, access medical reports, and connect 
+  through secure online consultations. We are committed to providing 
+  reliable, fast, and patient-friendly healthcare services, all in one place.
+</p>
+
         </div>
 
         <div>
