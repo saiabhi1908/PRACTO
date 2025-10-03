@@ -72,7 +72,6 @@ const App = () => {
           <LoadingOverlay />
           <ToastContainer />
           <Navbar />
-          <LanguageRecommendation />
           <VoiceAssistant />
 
           {currentLocation.pathname === '/' && location.lat && location.lng && (
