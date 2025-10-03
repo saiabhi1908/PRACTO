@@ -20,22 +20,19 @@ const Signup = () => {
     event.preventDefault();
 
     if (phase === 'OTP') return;
-  
+
     setLoading(true);
-    
+
     const minLoadingPromise = new Promise(resolve => setTimeout(resolve, 500));
     try {
       const registerPromise = axios.post(`${backendUrl}/api/user/register`, { name, email, password });
       const [, response] = await Promise.all([minLoadingPromise, registerPromise]);
       const { data } = response;
+
       if (data.success) {
-        const otpResponse = await axios.post(`${backendUrl}/api/user/send-otp`, { email });
-        if (otpResponse.data.success) {
-          toast.success('OTP sent to your email');
-          setPhase('OTP');
-        } else {
-          toast.error(otpResponse.data.message);
-        }
+        // ✅ RegisterUser already sends OTP in backend
+        toast.success('OTP sent to your email');
+        setPhase('OTP');
       } else {
         toast.error(data.message);
       }
@@ -53,9 +50,11 @@ const Signup = () => {
       const verifyPromise = axios.post(`${backendUrl}/api/user/verify-otp`, { email, otp });
       const [, response] = await Promise.all([minLoadingPromise, verifyPromise]);
       const { data } = response;
+
       if (data.success) {
         toast.success('Email verified. You can now log in.');
         setPhase('FORM');
+        navigate('/login'); // ✅ redirect to login after verification
       } else {
         toast.error(data.message);
       }
@@ -63,7 +62,6 @@ const Signup = () => {
       toast.error('OTP verification failed');
     } finally {
       setLoading(false);
-      navigate('/');
     }
   };
 
@@ -108,7 +106,9 @@ const Signup = () => {
               />
             </div>
 
-            <button type="submit" className='w-full py-2 my-2 text-base text-white rounded-md bg-primary'>Send OTP</button>
+            <button type="submit" className='w-full py-2 my-2 text-base text-white rounded-md bg-primary'>
+              Send OTP
+            </button>
           </>
         )}
 
@@ -130,7 +130,11 @@ const Signup = () => {
                 }}
               />
             </div>
-            <button type="button" onClick={onVerifyOtp} className='w-full py-2 my-2 text-base text-white rounded-md bg-primary'>
+            <button
+              type="button"
+              onClick={onVerifyOtp}
+              className='w-full py-2 my-2 text-base text-white rounded-md bg-primary'
+            >
               Verify OTP
             </button>
           </>
@@ -138,14 +142,16 @@ const Signup = () => {
 
         {phase === 'FORM' && (
           <p>
-            Already have an account{'  '}
+            Already have an account{' '}
             <span
               onClick={() => {
                 setPhase('FORM');
                 navigate('/login');
               }}
               className='underline cursor-pointer text-primary'
-            >Login here</span>
+            >
+              Login here
+            </span>
           </p>
         )}
       </div>
