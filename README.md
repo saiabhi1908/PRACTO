@@ -90,6 +90,34 @@ Practo combines cutting-edge technology with user-focused design, creating a com
 
 - Ratings and reviews of the doctors are visible throughout the platform, including in the voice assistant system
 
+### ⚡ Pathway Real-Time Streaming Integration
+
+This project uses Pathway as the real-time data engine to keep all healthcare data live and instantly available for AI pipelines.
+
+# ✔ What Pathway Does Here:
+
+Streams MongoDB collections in real-time
+
+Maintains a live index of doctors, appointments, reports, insurance, reviews, etc.
+
+Ensures AI models work on fresh & consistent data
+
+Supports AI doctor matchmaking & symptom checker
+
+Creates pathway_live_docs.jsonl that is updated whenever MongoDB changes
+
+## Collections synced through Pathway:
+
+doctors
+appointments
+medicalreports
+reviews
+users
+insurances
+hospitals
+symptomhistories
+
+
 ## 🛠️ Tech Stack
 - **Frontend:** React.js, Tailwind CSS  
 - **Backend:** Node.js, Express.js  
