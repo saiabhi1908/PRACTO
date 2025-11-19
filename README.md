@@ -117,6 +117,93 @@ insurances
 hospitals
 symptomhistories
 
+### Architecture Diagram:
+
+                         ┌──────────────────────────────┐
+                         │          FRONTEND             │
+                         │  React + Tailwind + WebRTC    │
+                         │  ---------------------------   │
+ Patient/Doctor  <──────>│  UI Screens:                  │
+ (Web/Voice)              │  • Appointment Booking        │
+                         │  • Video Consultation          │
+ Voice Assistant <──────>│  • Reports & Prescriptions    │
+ (Web Speech API)         │  • Doctor Dashboard           │
+                         └───────────────┬───────────────┘
+                                         │ HTTPS/REST
+                                         ▼
+                   ┌──────────────────────────────┐
+                   │            BACKEND            │
+                   │     Node.js + Express.js      │
+                   │-------------------------------│
+                   │ API Modules:                  │
+                   │  • Auth (JWT, 2FA, OTP)       │
+                   │  • Appointments               │
+                   │  • Doctor Matchmaking (AI)    │
+                   │  • Symptom Checker (AI)       │
+                   │  • Reports/Prescriptions      │
+                   │  • Payments (Juspay-opt)      │
+                   │  • Hospitals Nearby           │
+                   │                               │
+                   │ WebRTC Signaling Server       │
+                   └───────────────┬───────────────┘
+                                   │
+                                   ▼
+        ┌────────────────────────────────────────────────────┐
+        │                     MONGODB                         │
+        │-----------------------------------------------------│
+        │ Collections:                                        │
+        │  • users                                            │
+        │  • doctors                                          │
+        │  • appointments                                     │
+        │  • medicalreports                                   │
+        │  • prescriptions                                    │
+        │  • reviews                                          │
+        │  • insurances                                       │
+        │  • hospitals                                        │
+        │  • symptomhistories                                 │
+        └───────────────┬─────────────────────────────────────┘
+                        │ Change Streams
+                        ▼
+            ┌────────────────────────────────────┐
+            │               PATHWAY               │
+            │   Real-Time Stream Processing       │
+            │-------------------------------------│
+            │ • MongoDB Connector (live updates)  │
+            │ • Live Index for AI pipelines       │
+            │ • Maintains pathway_live_docs.jsonl │
+            │ • Powers:                           │
+            │     - AI Doctor Matchmaking         │
+            │     - AI Symptom Checker            │
+            │     - AI Prescription Validator     │
+            │     - Chatbot / Voice Assistant     │
+            └───────────────────┬─────────────────┘
+                                │
+                                ▼
+         ┌───────────────────────────────────────────────┐
+         │                    AI LAYER                    │
+         │------------------------------------------------│
+         │ 1. AI Chatbot (Queries, FAQ)                   │
+         │ 2. Symptom Checker (LLM + Pathway index)       │
+         │ 3. Doctor Matchmaking (Match Score Engine)     │
+         │ 4. Prescription Validator (Overdose/Safety)    │
+         │ 5. Voice Assistant NLU/NLP                     │
+         │                                                 │
+         │ Models Used:                                   │
+         │  • OpenAI / GPT / BDH (Pathway LLM xPack)      │
+         │  • Custom Prompting + Retrieval                │
+         └───────────────────────────────────────────────┘
+
+
+                         ┌──────────────────────────────┐
+                         │       THIRD-PARTY SERVICES    │
+                         │--------------------------------│
+                         │ • Google Maps / OSM (hospitals)│
+                         │ • Nodemailer (emails & OTP)    │
+                         │ • Juspay (payments - optional) │
+                         │ • WebRTC (video call infra)    │
+                         └──────────────────────────────┘
+
+
 
 ## 🛠️ Tech Stack
 - **Frontend:** React.js, Tailwind CSS  
