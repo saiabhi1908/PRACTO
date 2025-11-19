@@ -107,17 +107,23 @@ Supports AI doctor matchmaking & symptom checker
 Creates pathway_live_docs.jsonl that is updated whenever MongoDB changes
 
 ## Collections synced through Pathway:
-
 doctors
+
 appointments
+
 medicalreports
+
 reviews
+
 users
+
 insurances
+
 hospitals
+
 symptomhistories
 
-### Architecture Diadram:
+### Architecture Diagram:
 
 ![Practo architecture diagram](./assets/architecture.png)
 
