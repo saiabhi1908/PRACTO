@@ -127,6 +127,9 @@ symptomhistories
 
 ![Practo architecture diagram](./assets/architecture.png)
 
+### Working Demo
+
+![Practo architecture diagram](./assets/pathway.JPG)
 
 
 ## 🛠️ Tech Stack
