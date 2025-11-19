@@ -127,7 +127,7 @@ symptomhistories
 
 ![Practo architecture diagram](./assets/architecture.png)
 
-### Working Demo
+### Working Demo of Pathway:
 
 ![Practo architecture diagram](./assets/pathway.JPG)
 
