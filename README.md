@@ -119,7 +119,7 @@ symptomhistories
 
 ### Architecture Diadram:
 
-![Practo architecture diagram](./assets/architecture.png)
+![Practo architecture diagram](./assets/architecture.PNG)
 
 
 
