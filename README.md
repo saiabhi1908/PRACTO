@@ -117,6 +117,10 @@ insurances
 hospitals
 symptomhistories
 
+### Architecture Diadram:
+
+![Practo architecture diagram](./assets/architecture.png)
+
 
 
 ## 🛠️ Tech Stack
